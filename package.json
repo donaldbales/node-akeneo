@@ -1,0 +1,24 @@
+{
+  "name": "nodeakeneo",
+  "version": "1.0.0",
+  "description": "A set of Node modules to import data into Akeneo using its web-api",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Donald J. Bales",
+  "license": "GPL-3.0-or-later",
+  "dependencies": {
+    "@types/bunyan": "^1.8.6",
+    "@types/node": "^10.14.17",
+    "@types/nodemailer": "^4.6.6",
+    "@types/qs": "^6.5.3",
+    "axios": "^0.18.1",
+    "bunyan": "^1.8.12",
+    "nodemailer": "^5.1.1",
+    "qs": "^6.9.0",
+    "tslint": "^5.11.0",
+    "tslint-eslint-rules": "^5.4.0",
+    "typescript": "^2.9.2"
+  }
+}
