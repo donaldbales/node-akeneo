@@ -15,12 +15,12 @@ const password: string = (process.env.AKENEO_PASSWORD as string) || '';
 const baseUrl: string = (process.env.AKENEO_BASE_URL as string) || 'http://akeneo-pimee.local:8080';
 const tokenUrl: string = (process.env.AKENEO_TOKEN_URL as string) || '/api/oauth/v1/token';
 const patchLimit: number = Number.parseInt((process.env.AKENEO_PATCH_LIMIT as string) || '100', 10);
+
 let tokenResponse: any;
 let tokenExpiresAt: number = 0;
-
 async function getToken(): Promise<any> {
   const methodName: string = 'getToken';
-  logger.info({ moduleName, methodName }, `Starting...`);
+  logger.trace({ moduleName, methodName }, `Starting...`);
 
   if (tokenResponse &&
       tokenExpiresAt > Date.now()) {
@@ -44,11 +44,11 @@ async function getToken(): Promise<any> {
     try {
       const tokenRequestedAt: number = Date.now();
       response = await axios.post(url, data, options);
-      // logger.info({ moduleName, methodName }, `response=\n${inspect(response)}`);
+      logger.trace({ moduleName, methodName }, `response=\n${inspect(response)}`);
 
       tokenResponse = response.data ? response.data : {};
       tokenExpiresAt = tokenRequestedAt + (tokenResponse.expires_in * 1000);
-      // logger.info({ moduleName, methodName }, `tokenResponse=\n${inspect(tokenResponse)}`);
+      logger.trace({ moduleName, methodName }, `tokenResponse=\n${inspect(tokenResponse)}`);
       return tokenResponse.access_token;
     } catch (err) {
       logger.error({ moduleName, methodName, err });
@@ -59,7 +59,7 @@ async function getToken(): Promise<any> {
 
 export async function get(apiUrl: string): Promise<any> {
   const methodName: string = 'get';
-  logger.info({ moduleName, methodName }, `Starting...`);
+  logger.info({ moduleName, methodName, apiUrl }, `Starting...`);
   const accessToken: string = await getToken();
   const options: any = {
     headers: {
@@ -74,10 +74,10 @@ export async function get(apiUrl: string): Promise<any> {
   for ( ; ; ) {
     try {
       response = await axios.get(url, options);
-      // logger.info({ moduleName, methodName }, `response=\n${inspect(response)}`);
+      logger.trace({ moduleName, methodName }, `response=\n${inspect(response)}`);
 
       const pageResponse = response.data ? response.data : {};
-      // logger.info({ moduleName, methodName }, `pageResponse=\n${inspect(pageResponse)}`);
+      logger.trace({ moduleName, methodName }, `pageResponse=\n${inspect(pageResponse)}`);
       // console.log(pageResponse);
       if (pageResponse &&
           pageResponse._embedded &&
@@ -89,7 +89,16 @@ export async function get(apiUrl: string): Promise<any> {
           }
           results.push(item);
         }
+      } else
+      if (pageResponse instanceof Array) {
+        for (const item of pageResponse) {
+          if (item._links) {
+            delete item._links;
+          }
+          results.push(item);
+        }
       }
+
       if (pageResponse &&
           pageResponse._links &&
           pageResponse._links.next &&
@@ -100,8 +109,20 @@ export async function get(apiUrl: string): Promise<any> {
         url = '';
       }
     } catch (err) {
-      logger.info({ moduleName, methodName, err });
-      return err;
+      if (err.response &&
+          err.response.data &&
+          err.response.data.message) {
+        logger.info({ moduleName, methodName, url }, `${err.response.data.message}`);
+      }
+
+      if (err.response &&
+          err.response.status &&
+          err.response.status === 404) {
+        url = '';
+      } else {
+        logger.error({ moduleName, methodName, err });
+        return err;
+      }
     }
     if (url === '') {
       break;
@@ -112,7 +133,7 @@ export async function get(apiUrl: string): Promise<any> {
 
 export async function patch(apiUrl: string, docs: any[]): Promise<any> {
   const methodName: string = 'patch';
-  logger.info({ moduleName, methodName }, `Starting...`);
+  logger.info({ moduleName, methodName, apiUrl, docs: docs.length }, `Starting...`);
   const accessToken: string = await getToken();
   const options: any = {
     headers: {
@@ -133,10 +154,10 @@ export async function patch(apiUrl: string, docs: any[]): Promise<any> {
       // console.log(`\n\n${data}\n\n`);
       try {
         response = await axios.patch(url, Buffer.from(data), options);
-        logger.info({ moduleName, methodName }, `response=\n${inspect(response)}`);
+        logger.trace({ moduleName, methodName }, `response=\n${inspect(response)}`);
 
         const pageResponse = response.data ? response.data : {};
-        logger.info({ moduleName, methodName }, `pageResponse=\n${inspect(pageResponse)}`);
+        logger.trace({ moduleName, methodName }, `pageResponse=\n${inspect(pageResponse)}`);
         // console.log(pageResponse);
 /*
         if (pageResponse &&

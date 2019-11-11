@@ -8,10 +8,17 @@ import { Attribute } from './interfaces/Attribute';
 import { AttributeGroup } from './interfaces/AttributeGroup';
 import { AttributeOption } from './interfaces/AttributeOption';
 import { Category } from './interfaces/Category';
+import { Channel } from './interfaces/Channel';
+import { Currency } from './interfaces/Currency';
 import { Family } from './interfaces/Family';
 import { FamilyVariant } from './interfaces/FamilyVariant';
+import { Locale } from './interfaces/Locale';
+import { MeasureFamily } from './interfaces/MeasureFamily';
 import { Product } from './interfaces/Product';
 import { ProductModel } from './interfaces/ProductModel';
+import { ReferenceEntity } from './interfaces/ReferenceEntity';
+import { ReferenceEntityAttribute } from './interfaces/ReferenceEntityAttribute';
+import { ReferenceEntityAttributeOption } from './interfaces/ReferenceEntityAttributeOption';
 
 import { getLogger } from './logger';
 const logger: any = getLogger('nodeakeneo');
@@ -136,10 +143,18 @@ const filenameAttributes: string = 'attributes.json';
 const filenameAttributeGroups: string = 'attributeGroups.json';
 const filenameAttributeOptions: string = 'attributeOptions.json';
 const filenameCategories: string = 'categories.json';
+const filenameChannels: string = 'channels.json';
+const filenameCurrencies: string = 'currencies.json';
 const filenameFamilies: string = 'families.json';
 const filenameFamilyVariants: string = 'familyVariants.json';
+const filenameLocales: string = 'locales.json';
+const filenameMeasureFamilies: string = 'measureFamilies.json';
 const filenameProducts: string = 'products.json';
 const filenameProductModels: string = 'productModels.json';
+const filenameReferenceEntities: string = 'referenceEntities.json';
+const filenameReferenceEntityAttributes: string = 'referenceEntityAttributes.json';
+const filenameReferenceEntityAttributeOptions: string = 'referenceEntityAttributeOptions.json';
+const filenameReferenceEntityRecords: string = 'referenceEntityRecords.json';
 
 const open: any = util.promisify(fs.open);
 const write: any = util.promisify(fs.write);
@@ -278,6 +293,54 @@ export async function exportCategories(): Promise<any> {
   return OK;
 }
 
+export async function exportChannels(): Promise<any> {
+  const methodName: string = 'exportChannels';
+  logger.info({ moduleName, methodName }, 'Starting...');
+
+  let channels: Channel[];
+  try {
+    channels = await get(apiUrlChannels());
+    logger.debug({ moduleName, methodName, channels });
+  } catch (err) {
+    logger.info({ moduleName, methodName, err });
+    return err;
+  }
+  if (channels !== null &&
+      typeof channels[Symbol.iterator] === 'function') {
+    const fileName: string = path.join(exportPath, filenameChannels);
+    const fileDesc: number = await open(fileName, 'w');
+    for (const channel of channels) {
+      await write(fileDesc, Buffer.from(JSON.stringify(channel) + '\n'));
+    }
+    close(fileDesc);
+  }
+  return OK;
+}
+
+export async function exportCurrencies(): Promise<any> {
+  const methodName: string = 'exportCurrencies';
+  logger.info({ moduleName, methodName }, 'Starting...');
+
+  let currencies: Currency[];
+  try {
+    currencies = await get(apiUrlCurrencies());
+    logger.debug({ moduleName, methodName, currencies });
+  } catch (err) {
+    logger.info({ moduleName, methodName, err });
+    return err;
+  }
+  if (currencies !== null &&
+      typeof currencies[Symbol.iterator] === 'function') {
+    const fileName: string = path.join(exportPath, filenameCurrencies);
+    const fileDesc: number = await open(fileName, 'w');
+    for (const currency of currencies) {
+      await write(fileDesc, Buffer.from(JSON.stringify(currency) + '\n'));
+    }
+    close(fileDesc);
+  }
+  return OK;
+}
+
 export async function exportFamilies(): Promise<any> {
   const methodName: string = 'exportFamilies';
   logger.info({ moduleName, methodName }, 'Starting...');
@@ -340,6 +403,54 @@ export async function exportFamilyVariants(familyCode: string): Promise<any> {
   return OK;
 }
 
+export async function exportLocales(): Promise<any> {
+  const methodName: string = 'exportLocales';
+  logger.info({ moduleName, methodName }, 'Starting...');
+
+  let locales: Locale[];
+  try {
+    locales = await get(apiUrlLocales());
+    logger.debug({ moduleName, methodName, locales });
+  } catch (err) {
+    logger.info({ moduleName, methodName, err });
+    return err;
+  }
+  if (locales !== null &&
+      typeof locales[Symbol.iterator] === 'function') {
+    const fileName: string = path.join(exportPath, filenameLocales);
+    const fileDesc: number = await open(fileName, 'w');
+    for (const locale of locales) {
+      await write(fileDesc, Buffer.from(JSON.stringify(locale) + '\n'));
+    }
+    close(fileDesc);
+  }
+  return OK;
+}
+
+export async function exportMeasureFamilies(): Promise<any> {
+  const methodName: string = 'exportMeasureFamilies';
+  logger.info({ moduleName, methodName }, 'Starting...');
+
+  let measureFamilies: MeasureFamily[];
+  try {
+    measureFamilies = await get(apiUrlMeasureFamilies());
+    logger.debug({ moduleName, methodName, measureFamilies });
+  } catch (err) {
+    logger.info({ moduleName, methodName, err });
+    return err;
+  }
+  if (measureFamilies !== null &&
+      typeof measureFamilies[Symbol.iterator] === 'function') {
+    const fileName: string = path.join(exportPath, filenameMeasureFamilies);
+    const fileDesc: number = await open(fileName, 'w');
+    for (const measureFamily of measureFamilies) {
+      await write(fileDesc, Buffer.from(JSON.stringify(measureFamily) + '\n'));
+    }
+    close(fileDesc);
+  }
+  return OK;
+}
+
 export async function exportProducts(): Promise<any> {
   const methodName: string = 'exportProduct';
   logger.info({ moduleName, methodName }, 'Starting...');
@@ -392,11 +503,139 @@ export async function exportProductModels(): Promise<any> {
 
 // TODO: export function exportProductMediaFile(): Promise<any>
 
+export async function exportReferenceEntities(): Promise<any> {
+  const methodName: string = 'exportReferenceEntities';
+  logger.info({ moduleName, methodName }, 'Starting...');
+
+  try {
+    await unlink(path.join(exportPath, filenameReferenceEntityAttributes));
+  } catch (err) {
+    if (err.code !== 'ENOENT') {
+      logger.error({ moduleName, methodName, err });
+    }
+  }
+
+  try {
+    await unlink(path.join(exportPath, filenameReferenceEntityAttributeOptions));
+  } catch (err) {
+    if (err.code !== 'ENOENT') {
+      logger.error({ moduleName, methodName, err });
+    }
+  }
+
+  let referenceEntities: ReferenceEntity[];
+  try {
+    referenceEntities = await get(apiUrlReferenceEntities());
+    logger.debug({ moduleName, methodName, referenceEntities });
+  } catch (err) {
+    logger.info({ moduleName, methodName, err });
+    return err;
+  }
+  if (referenceEntities !== null &&
+      typeof referenceEntities[Symbol.iterator] === 'function') {
+    const fileName: string = path.join(exportPath, filenameReferenceEntities);
+    const fileDesc: number = await open(fileName, 'w');
+    for (const referenceEntity of referenceEntities) {
+      await write(fileDesc, Buffer.from(JSON.stringify(referenceEntity) + '\n'));
+      try {
+        await exportReferenceEntityAttributes(referenceEntity.code);
+      } catch (err) {
+        logger.info({ moduleName, methodName, err });
+        return err;
+      }
+    }
+    close(fileDesc);
+  }
+  return OK;
+}
+
+export async function exportReferenceEntityAttributes(referenceEntityCode: string): Promise<any> {
+  const methodName: string = 'exportReferenceEntityAttributes';
+  logger.info({ moduleName, methodName }, 'Starting...');
+
+  let referenceEntityAttributes: ReferenceEntityAttribute[];
+  try {
+    referenceEntityAttributes = await get(apiUrlReferenceEntityAttributes(referenceEntityCode));
+    logger.debug({ moduleName, methodName, referenceEntityAttributes });
+  } catch (err) {
+    logger.info({ moduleName, methodName, err });
+    return err;
+  }
+  if (referenceEntityAttributes !== null &&
+      typeof referenceEntityAttributes[Symbol.iterator] === 'function') {
+    const fileName: string = path.join(exportPath, filenameReferenceEntityAttributes);
+    const fileDesc: number = await open(fileName, 'a');
+    for (const referenceEntityAttribute of referenceEntityAttributes) {
+      if (!(referenceEntityAttribute.reference_entity_code)) {
+        referenceEntityAttribute.reference_entity_code = referenceEntityCode;
+      }
+      await write(fileDesc, Buffer.from(JSON.stringify(referenceEntityAttribute) + '\n'));
+      if (referenceEntityAttribute.type === 'multiple_options' ||
+          referenceEntityAttribute.type === 'single_option') {
+        try {
+          await exportReferenceEntityAttributeOptions(referenceEntityCode, referenceEntityAttribute.code);
+        } catch (err) {
+          logger.info({ moduleName, methodName, err });
+          return err;
+        }
+      }
+    }
+    close(fileDesc);
+  }
+  return OK;
+}
+
+export async function exportReferenceEntityAttributeOptions(referenceEntityCode: string,
+                                                            attributeCode: string): Promise<any> {
+  const methodName: string = 'exportReferenceEntityAttributeOptions';
+  logger.info({ moduleName, methodName }, 'Starting...');
+
+  let referenceEntityAttributeOptions: ReferenceEntityAttributeOption[] = [];
+  try {
+    referenceEntityAttributeOptions = await get(apiUrlReferenceEntityAttributeOptions(referenceEntityCode,
+                                                                                      attributeCode));
+    logger.debug({ moduleName, methodName, referenceEntityAttributeOptions });
+  } catch (err) {
+    if (err.code && err.code !== 404) {
+      logger.info({ moduleName, methodName, err });
+      return err;
+    }
+  }
+  if (referenceEntityAttributeOptions !== null &&
+      typeof referenceEntityAttributeOptions[Symbol.iterator] === 'function') {
+    const fileName: string = path.join(exportPath, filenameReferenceEntityAttributeOptions);
+    const fileDesc: number = await open(fileName, 'a');
+    for (const referenceEntityAttributeOption of referenceEntityAttributeOptions) {
+      if (!(referenceEntityAttributeOption.reference_entity_code)) {
+        referenceEntityAttributeOption.reference_entity_code = referenceEntityCode;
+      }
+      if (!(referenceEntityAttributeOption.attribute_code)) {
+        referenceEntityAttributeOption.attribute_code = attributeCode;
+      }
+      await write(fileDesc, Buffer.from(JSON.stringify(referenceEntityAttributeOption) + '\n'));
+    }
+    close(fileDesc);
+  }
+  return OK;
+}
+
+// TODO: export function exportReferenceEntityMediaFile(): Promise<any>
+
+// TODO: PAM
+
 // A main method with no command line parameter management
 async function main(): Promise<any> {
   const methodName: string = 'main';
   logger.info({ moduleName, methodName }, `Starting...`);
-/*
+
+  await exportChannels();
+
+  await exportLocales();
+
+  await exportCurrencies();
+
+  await exportMeasureFamilies();
+
   await exportAttributes();
 
   await exportAttributeGroups();
@@ -408,8 +647,10 @@ async function main(): Promise<any> {
   await exportFamilies();
 
   await exportProducts();
-*/
+
   await exportProductModels();
+
+  await exportReferenceEntities();
 
   if (require.main === module) {
     setTimeout(() => { process.exit(0); }, 10000);
