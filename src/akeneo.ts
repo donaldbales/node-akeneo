@@ -10,8 +10,10 @@ import { AttributeOption } from './interfaces/AttributeOption';
 import { Category } from './interfaces/Category';
 import { Family } from './interfaces/Family';
 import { FamilyVariant } from './interfaces/FamilyVariant';
-import { getLogger } from './logger';
+import { Product } from './interfaces/Product';
+import { ProductModel } from './interfaces/ProductModel';
 
+import { getLogger } from './logger';
 const logger: any = getLogger('nodeakeneo');
 
 const moduleName: string = 'akeneo';
@@ -136,6 +138,8 @@ const filenameAttributeOptions: string = 'attributeOptions.json';
 const filenameCategories: string = 'categories.json';
 const filenameFamilies: string = 'families.json';
 const filenameFamilyVariants: string = 'familyVariants.json';
+const filenameProducts: string = 'products.json';
+const filenameProductModels: string = 'productModels.json';
 
 const open: any = util.promisify(fs.open);
 const write: any = util.promisify(fs.write);
@@ -336,11 +340,63 @@ export async function exportFamilyVariants(familyCode: string): Promise<any> {
   return OK;
 }
 
+export async function exportProducts(): Promise<any> {
+  const methodName: string = 'exportProduct';
+  logger.info({ moduleName, methodName }, 'Starting...');
+
+  let products: Product[];
+  try {
+    products = await get(apiUrlProducts());
+    logger.debug({ moduleName, methodName, products });
+  } catch (err) {
+    logger.info({ moduleName, methodName, err });
+    return err;
+  }
+  if (products !== null &&
+      typeof products[Symbol.iterator] === 'function') {
+    const fileName: string = path.join(exportPath, filenameProducts);
+    const fileDesc: number = await open(fileName, 'w');
+    for (const product of products) {
+      await write(fileDesc, Buffer.from(JSON.stringify(product) + '\n'));
+    }
+    close(fileDesc);
+  }
+  return OK;
+}
+
+export async function exportProductModels(): Promise<any> {
+  const methodName: string = 'exportProductModels';
+  logger.info({ moduleName, methodName }, 'Starting...');
+
+  let productModels: ProductModel[];
+  try {
+    productModels = await get(apiUrlProductModels());
+    logger.debug({ moduleName, methodName, productModels });
+  } catch (err) {
+    logger.info({ moduleName, methodName, err });
+    return err;
+  }
+  if (productModels !== null &&
+      typeof productModels[Symbol.iterator] === 'function') {
+    const fileName: string = path.join(exportPath, filenameProductModels);
+    const fileDesc: number = await open(fileName, 'w');
+    for (const productModel of productModels) {
+      await write(fileDesc, Buffer.from(JSON.stringify(productModel) + '\n'));
+    }
+    close(fileDesc);
+  }
+  return OK;
+}
+
+// TODO: export function exportPublishedProduct(): Promise<any>
+
+// TODO: export function exportProductMediaFile(): Promise<any>
+
 // A main method with no command line parameter management
 async function main(): Promise<any> {
   const methodName: string = 'main';
   logger.info({ moduleName, methodName }, `Starting...`);
-
+/*
   await exportAttributes();
 
   await exportAttributeGroups();
@@ -350,6 +406,10 @@ async function main(): Promise<any> {
   await exportCategories();
 
   await exportFamilies();
+
+  await exportProducts();
+*/
+  await exportProductModels();
 
   if (require.main === module) {
     setTimeout(() => { process.exit(0); }, 10000);
