@@ -256,12 +256,74 @@ export async function importCategories(): Promise<any> {
   return OK;
 }
 
-// TODO: export async function importChannels(): Promise<any> {
-// TODO: export async function importCurrencies(): Promise<any> {
-// TODO: export async function importFamilies(): Promise<any> {
-// TODO: export async function importFamilyVariants(familyCode: string): Promise<any> {
-// TODO: export async function importLocales(): Promise<any> {
-// TODO: export async function importMeasureFamilies(): Promise<any> {
+export async function importChannels(): Promise<any> {
+  const methodName: string = 'importChannels';
+  logger.info({ moduleName, methodName }, 'Starting...');
+
+  const fileName: string = path.join(exportPath, filenameChannels);
+  const fileDesc: number = await open(fileName, 'r');
+  const buffer: string = (await read(fileDesc)).toString().replace(/\n/gi, ', ').slice(0, -2);
+  await close(fileDesc);
+  if (buffer.length > 0) {
+    const channels: Channel[] = JSON.parse(`[ ${buffer} ]`);
+    const results = await patch(apiUrlChannels(), channels);
+    logger.info({ moduleName, methodName, results });
+  }
+  return OK;
+}
+
+// N/A: export async function importCurrencies(): Promise<any> {
+
+export async function importFamilies(): Promise<any> {
+  const methodName: string = 'importFamilies';
+  logger.info({ moduleName, methodName }, 'Starting...');
+
+  const fileName: string = path.join(exportPath, filenameFamilies);
+  const fileDesc: number = await open(fileName, 'r');
+  const buffer: string = (await read(fileDesc)).toString().replace(/\n/gi, ', ').slice(0, -2);
+  await close(fileDesc);
+  if (buffer.length > 0) {
+    const families: Family[] = JSON.parse(`[ ${buffer} ]`);
+    const results = await patch(apiUrlFamilies(), families);
+    logger.info({ moduleName, methodName, results });
+  }
+  return OK;
+}
+
+export async function importFamilyVariants(): Promise<any> {
+  const methodName: string = 'importFamilyVariants';
+  logger.info({ moduleName, methodName }, 'Starting...');
+
+  const fileName: string = path.join(exportPath, filenameFamilyVariants);
+  const fileDesc: number = await open(fileName, 'r');
+  const buffer: string = (await read(fileDesc)).toString().replace(/\n/gi, ', ').slice(0, -2);
+  await close(fileDesc);
+  if (buffer.length > 0) {
+    const familyVariants: FamilyVariant[] = JSON.parse(`[ ${buffer} ]`);
+    if (familyVariants.length > 0 &&
+        familyVariants[0].family) {
+      let familyCode: string = familyVariants[0].family || '';
+      let familyCodeFamilyVariants: any[] = [];
+      for (let i = 0; i < familyVariants.length; i++) {
+        if (familyCode !== familyVariants[i].family ||
+           (i + 1) === familyVariants.length) {
+          const results = await patch(apiUrlFamilyVariants(familyCode), familyCodeFamilyVariants);
+          logger.info({ moduleName, methodName, results });
+          familyCode = familyVariants[i].family || '';
+          familyCodeFamilyVariants = [];
+        }
+        const familyVariant: any = familyVariants[i];
+        delete familyVariant.family;
+        familyCodeFamilyVariants.push(familyVariant);
+      }
+    }
+  }
+  return OK;
+}
+
+// N/A: export async function importLocales(): Promise<any> {
+// N/A: export async function importMeasureFamilies(): Promise<any> {
+
 // TODO: export async function importProducts(): Promise<any> {
 // TODO: export async function importProductModels(): Promise<any> {
 // TODO: export async function importReferenceEntities(): Promise<any> {
@@ -503,6 +565,11 @@ export async function exportFamilyVariants(familyCode: string): Promise<any> {
     const fileName: string = path.join(exportPath, filenameFamilyVariants);
     const fileDesc: number = await open(fileName, 'a');
     for (const familyVariant of familyVariants) {
+      // NOTE: I had to add attribute family. Even though the doc says it's
+      //       not needed, it doesn't work without it.
+      if (!(familyVariant.family)) {
+        familyVariant.family = familyCode;
+      }
       await write(fileDesc, Buffer.from(JSON.stringify(familyVariant) + '\n'));
     }
     await close(fileDesc);
@@ -761,12 +828,18 @@ async function main(): Promise<any> {
 
   await importAssociationTypes();
 
+  await importChannels();
+
   await importAttributes();
-*/
+
   await importAttributeOptions();
-/*
+
   await importAttributeGroups();
 
+  await importFamilies();
+*/
+  await importFamilyVariants();
+/*
   await importCategories();
 */
   if (require.main === module) {
