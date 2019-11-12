@@ -24,7 +24,33 @@ import { getLogger } from './logger';
 const logger: any = getLogger('nodeakeneo');
 
 const moduleName: string = 'akeneo';
+
 const exportPath: string = (process.env.AKENEO_EXPORT_PATH as string) || '.';
+const OK: any = { status: 'OK' };
+
+const filenameAssociationTypes: string = 'associationTypes.json';
+const filenameAttributes: string = 'attributes.json';
+const filenameAttributeGroups: string = 'attributeGroups.json';
+const filenameAttributeOptions: string = 'attributeOptions.json';
+const filenameCategories: string = 'categories.json';
+const filenameChannels: string = 'channels.json';
+const filenameCurrencies: string = 'currencies.json';
+const filenameFamilies: string = 'families.json';
+const filenameFamilyVariants: string = 'familyVariants.json';
+const filenameLocales: string = 'locales.json';
+const filenameMeasureFamilies: string = 'measureFamilies.json';
+const filenameProducts: string = 'products.json';
+const filenameProductModels: string = 'productModels.json';
+const filenameReferenceEntities: string = 'referenceEntities.json';
+const filenameReferenceEntityAttributes: string = 'referenceEntityAttributes.json';
+const filenameReferenceEntityAttributeOptions: string = 'referenceEntityAttributeOptions.json';
+const filenameReferenceEntityRecords: string = 'referenceEntityRecords.json';
+
+const close: any = util.promisify(fs.close);
+const open: any = util.promisify(fs.open);
+const read: any = util.promisify(fs.readFile);
+const unlink: any = util.promisify(fs.unlink);
+const write: any = util.promisify(fs.write);
 
 // Catalog APIs
 
@@ -136,30 +162,111 @@ export function apiUrlAssetTags(): string {
   return '/api/rest/v1/asset-tags';
 }
 
-const OK: any = { status: 'OK' };
+export async function importAssociationTypes(): Promise<any> {
+  const methodName: string = 'importAssociationTypes';
+  logger.info({ moduleName, methodName }, 'Starting...');
 
-const filenameAssociationTypes: string = 'associationTypes.json';
-const filenameAttributes: string = 'attributes.json';
-const filenameAttributeGroups: string = 'attributeGroups.json';
-const filenameAttributeOptions: string = 'attributeOptions.json';
-const filenameCategories: string = 'categories.json';
-const filenameChannels: string = 'channels.json';
-const filenameCurrencies: string = 'currencies.json';
-const filenameFamilies: string = 'families.json';
-const filenameFamilyVariants: string = 'familyVariants.json';
-const filenameLocales: string = 'locales.json';
-const filenameMeasureFamilies: string = 'measureFamilies.json';
-const filenameProducts: string = 'products.json';
-const filenameProductModels: string = 'productModels.json';
-const filenameReferenceEntities: string = 'referenceEntities.json';
-const filenameReferenceEntityAttributes: string = 'referenceEntityAttributes.json';
-const filenameReferenceEntityAttributeOptions: string = 'referenceEntityAttributeOptions.json';
-const filenameReferenceEntityRecords: string = 'referenceEntityRecords.json';
+  const fileName: string = path.join(exportPath, filenameAssociationTypes);
+  const fileDesc: number = await open(fileName, 'r');
+  const buffer: string = (await read(fileDesc)).toString().replace(/\n/gi, ', ').slice(0, -2);
+  await close(fileDesc);
+  if (buffer.length > 0) {
+    const associationTypes: AssociationType[] = JSON.parse(`[ ${buffer} ]`);
+    const results = await patch(apiUrlAssociationTypes(), associationTypes);
+    logger.info({ moduleName, methodName, results });
+  }
+  return OK;
+}
 
-const open: any = util.promisify(fs.open);
-const write: any = util.promisify(fs.write);
-const close: any = util.promisify(fs.close);
-const unlink: any = util.promisify(fs.unlink);
+export async function importAttributes(): Promise<any> {
+  const methodName: string = 'importAttributes';
+  logger.info({ moduleName, methodName }, 'Starting...');
+
+  const fileName: string = path.join(exportPath, filenameAttributes);
+  const fileDesc: number = await open(fileName, 'r');
+  const buffer: string = (await read(fileDesc)).toString().replace(/\n/gi, ', ').slice(0, -2);
+  await close(fileDesc);
+  if (buffer.length > 0) {
+    const attributes: Attribute[] = JSON.parse(`[ ${buffer} ]`);
+    const results = await patch(apiUrlAttributes(), attributes);
+    logger.info({ moduleName, methodName, results });
+  }
+  return OK;
+}
+
+export async function importAttributeGroups(): Promise<any> {
+  const methodName: string = 'importAttributeGroups';
+  logger.info({ moduleName, methodName }, 'Starting...');
+
+  const fileName: string = path.join(exportPath, filenameAttributeGroups);
+  const fileDesc: number = await open(fileName, 'r');
+  const buffer: string = (await read(fileDesc)).toString().replace(/\n/gi, ', ').slice(0, -2);
+  await close(fileDesc);
+  if (buffer.length > 0) {
+    const attributeGroups: Attribute[] = JSON.parse(`[ ${buffer} ]`);
+    const results = await patch(apiUrlAttributeGroups(), attributeGroups);
+    logger.info({ moduleName, methodName, results });
+  }
+  return OK;
+}
+
+export async function importAttributeOptions(): Promise<any> {
+  const methodName: string = 'importAttributeOptions';
+  logger.info({ moduleName, methodName }, 'Starting...');
+
+  const fileName: string = path.join(exportPath, filenameAttributeOptions);
+  const fileDesc: number = await open(fileName, 'r');
+  const buffer: string = (await read(fileDesc)).toString().replace(/\n/gi, ', ').slice(0, -2);
+  await close(fileDesc);
+  if (buffer.length > 0) {
+    const attributeOptions: AttributeOption[] = JSON.parse(`[ ${buffer} ]`);
+    if (attributeOptions.length > 0 &&
+        attributeOptions[0].attribute) {
+      let attributeCode: string = attributeOptions[0].attribute || '';
+      let attributeCodeAttributeOptions: any[] = [];
+      for (let i = 0; i < attributeOptions.length; i++) {
+        if (attributeCode !== attributeOptions[i].attribute ||
+           (i + 1) === attributeOptions.length) {
+          const results = await patch(apiUrlAttributeOptions(attributeCode), attributeCodeAttributeOptions);
+          logger.info({ moduleName, methodName, results });
+          attributeCode = attributeOptions[i].attribute || '';
+          attributeCodeAttributeOptions = [];
+        }
+        const attributeOption: any = attributeOptions[i];
+        attributeCodeAttributeOptions.push(attributeOption);
+      }
+    }
+  }
+  return OK;
+}
+
+export async function importCategories(): Promise<any> {
+  const methodName: string = 'importCategories';
+  logger.info({ moduleName, methodName }, 'Starting...');
+
+  const fileName: string = path.join(exportPath, filenameCategories);
+  const fileDesc: number = await open(fileName, 'r');
+  const buffer: string = (await read(fileDesc)).toString().replace(/\n/gi, ', ').slice(0, -2);
+  await close(fileDesc);
+  if (buffer.length > 0) {
+    const categories: Category[] = JSON.parse(`[ ${buffer} ]`);
+    const results = await patch(apiUrlCategories(), categories);
+    logger.info({ moduleName, methodName, results });
+  }
+  return OK;
+}
+
+// TODO: export async function importChannels(): Promise<any> {
+// TODO: export async function importCurrencies(): Promise<any> {
+// TODO: export async function importFamilies(): Promise<any> {
+// TODO: export async function importFamilyVariants(familyCode: string): Promise<any> {
+// TODO: export async function importLocales(): Promise<any> {
+// TODO: export async function importMeasureFamilies(): Promise<any> {
+// TODO: export async function importProducts(): Promise<any> {
+// TODO: export async function importProductModels(): Promise<any> {
+// TODO: export async function importReferenceEntities(): Promise<any> {
+// TODO: export async function importReferenceEntityAttributes(referenceEntityCode: string): Promise<any> {
+// TODO: export async function importReferenceEntityAttributeOptions(referenceEntityCode: string,
 
 export async function exportAssociationTypes(): Promise<any> {
   const methodName: string = 'exportAssociationTypes';
@@ -180,7 +287,7 @@ export async function exportAssociationTypes(): Promise<any> {
     for (const associationType of associationTypes) {
       await write(fileDesc, Buffer.from(JSON.stringify(associationType) + '\n'));
     }
-    close(fileDesc);
+    await close(fileDesc);
   }
   return OK;
 }
@@ -216,7 +323,7 @@ export async function exportAttributes(): Promise<any> {
         }
       }
     }
-    close(fileDesc);
+    await close(fileDesc);
   }
   return OK;
 }
@@ -240,7 +347,7 @@ export async function exportAttributeGroups(): Promise<any> {
     for (const attributeGroup of attributeGroups) {
       await write(fileDesc, Buffer.from(JSON.stringify(attributeGroup) + '\n'));
     }
-    close(fileDesc);
+    await close(fileDesc);
   }
   return OK;
 }
@@ -264,7 +371,7 @@ export async function exportAttributeOptions(attributeCode: string): Promise<any
     for (const attributeOption of attributeOptions) {
       await write(fileDesc, Buffer.from(JSON.stringify(attributeOption) + '\n'));
     }
-    close(fileDesc);
+    await close(fileDesc);
   }
   return OK;
 }
@@ -288,7 +395,7 @@ export async function exportCategories(): Promise<any> {
     for (const category of categories) {
       await write(fileDesc, Buffer.from(JSON.stringify(category) + '\n'));
     }
-    close(fileDesc);
+    await close(fileDesc);
   }
   return OK;
 }
@@ -312,7 +419,7 @@ export async function exportChannels(): Promise<any> {
     for (const channel of channels) {
       await write(fileDesc, Buffer.from(JSON.stringify(channel) + '\n'));
     }
-    close(fileDesc);
+    await close(fileDesc);
   }
   return OK;
 }
@@ -336,7 +443,7 @@ export async function exportCurrencies(): Promise<any> {
     for (const currency of currencies) {
       await write(fileDesc, Buffer.from(JSON.stringify(currency) + '\n'));
     }
-    close(fileDesc);
+    await close(fileDesc);
   }
   return OK;
 }
@@ -374,7 +481,7 @@ export async function exportFamilies(): Promise<any> {
         return err;
       }
     }
-    close(fileDesc);
+    await close(fileDesc);
   }
   return OK;
 }
@@ -398,7 +505,7 @@ export async function exportFamilyVariants(familyCode: string): Promise<any> {
     for (const familyVariant of familyVariants) {
       await write(fileDesc, Buffer.from(JSON.stringify(familyVariant) + '\n'));
     }
-    close(fileDesc);
+    await close(fileDesc);
   }
   return OK;
 }
@@ -422,7 +529,7 @@ export async function exportLocales(): Promise<any> {
     for (const locale of locales) {
       await write(fileDesc, Buffer.from(JSON.stringify(locale) + '\n'));
     }
-    close(fileDesc);
+    await close(fileDesc);
   }
   return OK;
 }
@@ -446,7 +553,7 @@ export async function exportMeasureFamilies(): Promise<any> {
     for (const measureFamily of measureFamilies) {
       await write(fileDesc, Buffer.from(JSON.stringify(measureFamily) + '\n'));
     }
-    close(fileDesc);
+    await close(fileDesc);
   }
   return OK;
 }
@@ -470,7 +577,7 @@ export async function exportProducts(): Promise<any> {
     for (const product of products) {
       await write(fileDesc, Buffer.from(JSON.stringify(product) + '\n'));
     }
-    close(fileDesc);
+    await close(fileDesc);
   }
   return OK;
 }
@@ -494,7 +601,7 @@ export async function exportProductModels(): Promise<any> {
     for (const productModel of productModels) {
       await write(fileDesc, Buffer.from(JSON.stringify(productModel) + '\n'));
     }
-    close(fileDesc);
+    await close(fileDesc);
   }
   return OK;
 }
@@ -544,7 +651,7 @@ export async function exportReferenceEntities(): Promise<any> {
         return err;
       }
     }
-    close(fileDesc);
+    await close(fileDesc);
   }
   return OK;
 }
@@ -580,7 +687,7 @@ export async function exportReferenceEntityAttributes(referenceEntityCode: strin
         }
       }
     }
-    close(fileDesc);
+    await close(fileDesc);
   }
   return OK;
 }
@@ -614,7 +721,7 @@ export async function exportReferenceEntityAttributeOptions(referenceEntityCode:
       }
       await write(fileDesc, Buffer.from(JSON.stringify(referenceEntityAttributeOption) + '\n'));
     }
-    close(fileDesc);
+    await close(fileDesc);
   }
   return OK;
 }
@@ -627,7 +734,7 @@ export async function exportReferenceEntityAttributeOptions(referenceEntityCode:
 async function main(): Promise<any> {
   const methodName: string = 'main';
   logger.info({ moduleName, methodName }, `Starting...`);
-
+/*
   await exportChannels();
 
   await exportLocales();
@@ -652,6 +759,16 @@ async function main(): Promise<any> {
 
   await exportReferenceEntities();
 
+  await importAssociationTypes();
+
+  await importAttributes();
+*/
+  await importAttributeOptions();
+/*
+  await importAttributeGroups();
+
+  await importCategories();
+*/
   if (require.main === module) {
     setTimeout(() => { process.exit(0); }, 10000);
   }

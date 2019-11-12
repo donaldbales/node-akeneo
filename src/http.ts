@@ -145,47 +145,52 @@ export async function patch(apiUrl: string, docs: any[]): Promise<any> {
   const results: any[] = [];
   const url: string = `${baseUrl}${apiUrl}`;
 
-  let data: string = '';
+  let data: string[] = [];
   for (let i = 0; i < docs.length; i++) {
-    data += `${JSON.stringify(docs[i])}\n`;
+    data.push(`${JSON.stringify(docs[i])}`);
 
     if ((1 + i) % patchLimit === 0 ||
          1 + i === docs.length) {
       // console.log(`\n\n${data}\n\n`);
       try {
-        response = await axios.patch(url, Buffer.from(data), options);
+        const buffer: Buffer = Buffer.from(data.join('\n'));
+        response = await axios.patch(url, buffer, options);
         logger.trace({ moduleName, methodName }, `response=\n${inspect(response)}`);
 
         const pageResponse = response.data ? response.data : {};
-        logger.trace({ moduleName, methodName }, `pageResponse=\n${inspect(pageResponse)}`);
-        // console.log(pageResponse);
-/*
-        if (pageResponse &&
-            pageResponse._embedded &&
-            pageResponse._embedded.items) {
-          // console.log(pageResponse._embedded.items);
-          for (const item of pageResponse._embedded.items) {
-            if (item._links) {
-              delete item._links;
+        logger.trace({ moduleName, methodName }, `pageResponse=\n${pageResponse}`);
+
+        if (pageResponse) {
+          let lines: any[] = [];
+          try {
+            if (typeof(pageResponse) === 'object') {
+              lines = JSON.parse(`[ ${JSON.stringify(pageResponse)} ]`);
+            } else {
+              lines = JSON.parse(`[ ${pageResponse.replace(/\n/gi, ', ')} ]`);
             }
-            results.push(item);
+            // console.log(lines);
+          } catch (err) {
+            logger.warn({ moduleName, methodName, err, pageResponse}, `Converting response into lines.`);
+            lines = [];
+          }
+          if (lines.length !== data.length) {
+            logger.warn({ moduleName, methodName, data: data.length, lines: lines.length }, `line count difference!`);
+          }
+          for (let j = 0; j < lines.length; j++) {
+            if (lines[j] && lines[j].status_code && lines[j].status_code >= 300) {
+              /* tslint:disable:object-literal-sort-keys */
+              logger.info({ moduleName, methodName,
+                line: JSON.parse(JSON.stringify(lines[j])),
+                data: JSON.parse(data[j]) });
+              /* tslint:enable:object-literal-sort-keys */
+            }
           }
         }
-        if (pageResponse &&
-            pageResponse._links &&
-            pageResponse._links.next &&
-            pageResponse._links.next.href) {
-          // console.log(pageResponse._links.next.href);
-          url = pageResponse._links.next.href;
-        } else {
-          url = '';
-        }
-*/
       } catch (err) {
-        logger.error({ moduleName, methodName, err });
+        logger.info({ moduleName, methodName, err });
         return err;
       }
-      data = '';
+      data = [];
     }
   }
   return results;
