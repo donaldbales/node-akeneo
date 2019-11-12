@@ -131,8 +131,107 @@ export async function get(apiUrl: string): Promise<any> {
   return results;
 }
 
-export async function patch(apiUrl: string, docs: any[]): Promise<any> {
+export async function patch(apiUrl: string, data: any): Promise<any> {
   const methodName: string = 'patch';
+  const docs = { length: (typeof(data) === 'object' && data instanceof Array ? data.length : 1) };
+  logger.info({ moduleName, methodName, apiUrl, docs: docs.length }, `Starting...`);
+  const accessToken: string = await getToken();
+  const options: any = {
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': `application/json`
+    }
+  };
+  let response: any = {};
+  const results: any[] = [];
+  const url: string = `${baseUrl}${apiUrl}`;
+
+  try {
+    const buffer: Buffer = Buffer.from(JSON.stringify(data));
+    response = await axios.patch(url, buffer, options);
+    logger.trace({ moduleName, methodName }, `response=\n${inspect(response)}`);
+    // console.log(response.status);
+
+    const pageResponse = response.data ? response.data : {};
+    logger.trace({ moduleName, methodName }, `pageResponse=\n${pageResponse}`);
+    // console.log(pageResponse);
+
+    if (pageResponse &&
+        typeof(pageResponse) === 'object' &&
+        pageResponse instanceof Array) {
+      const lines: any[] = pageResponse;
+      if (lines.length !== data.length) {
+        logger.warn({ moduleName, methodName, data: data.length, lines: lines.length }, `line count difference!`);
+      }
+      for (let j = 0; j < lines.length; j++) {
+        if (lines[j] && lines[j].status_code && lines[j].status_code >= 300) {
+          /* tslint:disable:object-literal-sort-keys */
+          logger.info({ moduleName, methodName,
+            line: JSON.parse(JSON.stringify(lines[j])),
+            data: JSON.parse(JSON.stringify(data[j])) });
+          /* tslint:enable:object-literal-sort-keys */
+        }
+      }
+    }
+  } catch (err) {
+    logger.info({ moduleName, methodName, err });
+    return err;
+  }
+/*
+  let data: string[] = [];
+  for (let i = 0; i < docs.length; i++) {
+    data.push(`${JSON.stringify(docs[i])}`);
+
+    if ((1 + i) % patchLimit === 0 ||
+         1 + i === docs.length) {
+      // console.log(`\n\n${data}\n\n`);
+      try {
+        const buffer: Buffer = Buffer.from(data.join('\n'));
+        response = await axios.patch(url, buffer, options);
+        logger.trace({ moduleName, methodName }, `response=\n${inspect(response)}`);
+
+        const pageResponse = response.data ? response.data : {};
+        logger.trace({ moduleName, methodName }, `pageResponse=\n${pageResponse}`);
+
+        if (pageResponse) {
+          let lines: any[] = [];
+          try {
+            if (typeof(pageResponse) === 'object') {
+              lines = JSON.parse(`[ ${JSON.stringify(pageResponse)} ]`);
+            } else {
+              lines = JSON.parse(`[ ${pageResponse.replace(/\n/gi, ', ')} ]`);
+            }
+            // console.log(lines);
+          } catch (err) {
+            logger.warn({ moduleName, methodName, err, pageResponse}, `Converting response into lines.`);
+            lines = [];
+          }
+          if (lines.length !== data.length) {
+            logger.warn({ moduleName, methodName, data: data.length, lines: lines.length }, `line count difference!`);
+          }
+          for (let j = 0; j < lines.length; j++) {
+            if (lines[j] && lines[j].status_code && lines[j].status_code >= 300) {
+              / tslint:disable:object-literal-sort-keys /
+              logger.info({ moduleName, methodName,
+                line: JSON.parse(JSON.stringify(lines[j])),
+                data: JSON.parse(data[j]) });
+              / tslint:enable:object-literal-sort-keys /
+            }
+          }
+        }
+      } catch (err) {
+        logger.info({ moduleName, methodName, err });
+        return err;
+      }
+      data = [];
+    }
+  }
+*/
+  return results;
+}
+
+export async function patchVndAkeneoCollection(apiUrl: string, docs: any[]): Promise<any> {
+  const methodName: string = 'patchVndAkeneoCollection';
   logger.info({ moduleName, methodName, apiUrl, docs: docs.length }, `Starting...`);
   const accessToken: string = await getToken();
   const options: any = {

@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as util from 'util';
 
-import { get, patch } from './http';
+import { get, patch, patchVndAkeneoCollection } from './http';
 import { AssociationType } from './interfaces/AssociationType';
 import { Attribute } from './interfaces/Attribute';
 import { AttributeGroup } from './interfaces/AttributeGroup';
@@ -19,6 +19,7 @@ import { ProductModel } from './interfaces/ProductModel';
 import { ReferenceEntity } from './interfaces/ReferenceEntity';
 import { ReferenceEntityAttribute } from './interfaces/ReferenceEntityAttribute';
 import { ReferenceEntityAttributeOption } from './interfaces/ReferenceEntityAttributeOption';
+import { ReferenceEntityRecord } from './interfaces/ReferenceEntityRecord';
 
 import { getLogger } from './logger';
 const logger: any = getLogger('nodeakeneo');
@@ -26,6 +27,7 @@ const logger: any = getLogger('nodeakeneo');
 const moduleName: string = 'akeneo';
 
 const exportPath: string = (process.env.AKENEO_EXPORT_PATH as string) || '.';
+const patchLimit: number = Number.parseInt((process.env.AKENEO_PATCH_LIMIT as string) || '100', 10);
 const OK: any = { status: 'OK' };
 
 const filenameAssociationTypes: string = 'associationTypes.json';
@@ -172,7 +174,7 @@ export async function importAssociationTypes(): Promise<any> {
   await close(fileDesc);
   if (buffer.length > 0) {
     const associationTypes: AssociationType[] = JSON.parse(`[ ${buffer} ]`);
-    const results = await patch(apiUrlAssociationTypes(), associationTypes);
+    const results = await patchVndAkeneoCollection(apiUrlAssociationTypes(), associationTypes);
     logger.info({ moduleName, methodName, results });
   }
   return OK;
@@ -188,7 +190,7 @@ export async function importAttributes(): Promise<any> {
   await close(fileDesc);
   if (buffer.length > 0) {
     const attributes: Attribute[] = JSON.parse(`[ ${buffer} ]`);
-    const results = await patch(apiUrlAttributes(), attributes);
+    const results = await patchVndAkeneoCollection(apiUrlAttributes(), attributes);
     logger.info({ moduleName, methodName, results });
   }
   return OK;
@@ -204,7 +206,7 @@ export async function importAttributeGroups(): Promise<any> {
   await close(fileDesc);
   if (buffer.length > 0) {
     const attributeGroups: Attribute[] = JSON.parse(`[ ${buffer} ]`);
-    const results = await patch(apiUrlAttributeGroups(), attributeGroups);
+    const results = await patchVndAkeneoCollection(apiUrlAttributeGroups(), attributeGroups);
     logger.info({ moduleName, methodName, results });
   }
   return OK;
@@ -227,7 +229,8 @@ export async function importAttributeOptions(): Promise<any> {
       for (let i = 0; i < attributeOptions.length; i++) {
         if (attributeCode !== attributeOptions[i].attribute ||
            (i + 1) === attributeOptions.length) {
-          const results = await patch(apiUrlAttributeOptions(attributeCode), attributeCodeAttributeOptions);
+          const results = await patchVndAkeneoCollection(
+            apiUrlAttributeOptions(attributeCode), attributeCodeAttributeOptions);
           logger.info({ moduleName, methodName, results });
           attributeCode = attributeOptions[i].attribute || '';
           attributeCodeAttributeOptions = [];
@@ -250,7 +253,7 @@ export async function importCategories(): Promise<any> {
   await close(fileDesc);
   if (buffer.length > 0) {
     const categories: Category[] = JSON.parse(`[ ${buffer} ]`);
-    const results = await patch(apiUrlCategories(), categories);
+    const results = await patchVndAkeneoCollection(apiUrlCategories(), categories);
     logger.info({ moduleName, methodName, results });
   }
   return OK;
@@ -266,7 +269,7 @@ export async function importChannels(): Promise<any> {
   await close(fileDesc);
   if (buffer.length > 0) {
     const channels: Channel[] = JSON.parse(`[ ${buffer} ]`);
-    const results = await patch(apiUrlChannels(), channels);
+    const results = await patchVndAkeneoCollection(apiUrlChannels(), channels);
     logger.info({ moduleName, methodName, results });
   }
   return OK;
@@ -284,7 +287,7 @@ export async function importFamilies(): Promise<any> {
   await close(fileDesc);
   if (buffer.length > 0) {
     const families: Family[] = JSON.parse(`[ ${buffer} ]`);
-    const results = await patch(apiUrlFamilies(), families);
+    const results = await patchVndAkeneoCollection(apiUrlFamilies(), families);
     logger.info({ moduleName, methodName, results });
   }
   return OK;
@@ -307,7 +310,7 @@ export async function importFamilyVariants(): Promise<any> {
       for (let i = 0; i < familyVariants.length; i++) {
         if (familyCode !== familyVariants[i].family ||
            (i + 1) === familyVariants.length) {
-          const results = await patch(apiUrlFamilyVariants(familyCode), familyCodeFamilyVariants);
+          const results = await patchVndAkeneoCollection(apiUrlFamilyVariants(familyCode), familyCodeFamilyVariants);
           logger.info({ moduleName, methodName, results });
           familyCode = familyVariants[i].family || '';
           familyCodeFamilyVariants = [];
@@ -324,11 +327,136 @@ export async function importFamilyVariants(): Promise<any> {
 // N/A: export async function importLocales(): Promise<any> {
 // N/A: export async function importMeasureFamilies(): Promise<any> {
 
-// TODO: export async function importProducts(): Promise<any> {
-// TODO: export async function importProductModels(): Promise<any> {
-// TODO: export async function importReferenceEntities(): Promise<any> {
-// TODO: export async function importReferenceEntityAttributes(referenceEntityCode: string): Promise<any> {
-// TODO: export async function importReferenceEntityAttributeOptions(referenceEntityCode: string,
+export async function importProducts(): Promise<any> {
+  const methodName: string = 'importProducts';
+  logger.info({ moduleName, methodName }, 'Starting...');
+
+  const fileName: string = path.join(exportPath, filenameProducts);
+  const fileDesc: number = await open(fileName, 'r');
+  const buffer: string = (await read(fileDesc)).toString().replace(/\n/gi, ', ').slice(0, -2);
+  await close(fileDesc);
+  if (buffer.length > 0) {
+    const products: Product[] = JSON.parse(`[ ${buffer} ]`);
+    const results = await patchVndAkeneoCollection(apiUrlProducts(), products);
+    logger.info({ moduleName, methodName, results });
+  }
+  return OK;
+}
+
+export async function importProductModels(): Promise<any> {
+  const methodName: string = 'importProductModels';
+  logger.info({ moduleName, methodName }, 'Starting...');
+
+  const fileName: string = path.join(exportPath, filenameProductModels);
+  const fileDesc: number = await open(fileName, 'r');
+  const buffer: string = (await read(fileDesc)).toString().replace(/\n/gi, ', ').slice(0, -2);
+  await close(fileDesc);
+  if (buffer.length > 0) {
+    const productModels: ProductModel[] = JSON.parse(`[ ${buffer} ]`);
+    const results = await patchVndAkeneoCollection(apiUrlProductModels(), productModels);
+    logger.info({ moduleName, methodName, results });
+  }
+  return OK;
+}
+
+export async function importReferenceEntities(): Promise<any> {
+  const methodName: string = 'importReferenceEntities';
+  logger.info({ moduleName, methodName }, 'Starting...');
+
+  const fileName: string = path.join(exportPath, filenameReferenceEntities);
+  const fileDesc: number = await open(fileName, 'r');
+  const buffer: string = (await read(fileDesc)).toString().replace(/\n/gi, ', ').slice(0, -2);
+  await close(fileDesc);
+  if (buffer.length > 0) {
+    const referenceEntities: ReferenceEntity[] = JSON.parse(`[ ${buffer} ]`);
+    for (const referenceEntity of referenceEntities) {
+      const results = await patch(`${apiUrlReferenceEntities()}/${referenceEntity.code}`, referenceEntity);
+      // logger.info({ moduleName, methodName, results });
+    }
+  }
+  return OK;
+}
+
+export async function importReferenceEntityAttributes(): Promise<any> {
+  const methodName: string = 'importReferenceEntityAttributes';
+  logger.info({ moduleName, methodName }, 'Starting...');
+
+  const fileName: string = path.join(exportPath, filenameReferenceEntityAttributes);
+  const fileDesc: number = await open(fileName, 'r');
+  const buffer: string = (await read(fileDesc)).toString().replace(/\n/gi, ', ').slice(0, -2);
+  await close(fileDesc);
+  if (buffer.length > 0) {
+    const referenceEntityAttributes: ReferenceEntityAttribute[] = JSON.parse(`[ ${buffer} ]`);
+    for (const referenceEntityAttribute of referenceEntityAttributes) {
+      const referenceEntityCode: string = referenceEntityAttribute.delete_reference_entity_code || '';
+      delete referenceEntityAttribute.delete_reference_entity_code;
+      const results = await patch(
+        `${apiUrlReferenceEntityAttributes(referenceEntityCode)}/${referenceEntityAttribute.code}`,
+        referenceEntityAttribute);
+      // logger.info({ moduleName, methodName, results });
+    }
+  }
+  return OK;
+}
+
+export async function importReferenceEntityAttributeOptions(): Promise<any> {
+  const methodName: string = 'importReferenceEntityAttributeOptions';
+  logger.info({ moduleName, methodName }, 'Starting...');
+
+  const fileName: string = path.join(exportPath, filenameReferenceEntityAttributeOptions);
+  const fileDesc: number = await open(fileName, 'r');
+  const buffer: string = (await read(fileDesc)).toString().replace(/\n/gi, ', ').slice(0, -2);
+  await close(fileDesc);
+  if (buffer.length > 0) {
+    const referenceEntityAttributeOptions: ReferenceEntityAttributeOption[] = JSON.parse(`[ ${buffer} ]`);
+    for (const referenceEntityAttributeOption of referenceEntityAttributeOptions) {
+      const referenceEntityCode: string = referenceEntityAttributeOption.delete_reference_entity_code || '';
+      const attributeCode: string = referenceEntityAttributeOption.delete_attribute_code || '';
+      delete referenceEntityAttributeOption.delete_reference_entity_code;
+      delete referenceEntityAttributeOption.delete_attribute_code;
+      const results = await patch(
+        `${apiUrlReferenceEntityAttributeOptions(referenceEntityCode, attributeCode)}` +
+        `/${referenceEntityAttributeOption.code}`,
+        referenceEntityAttributeOption);
+      // logger.info({ moduleName, methodName, results });
+    }
+  }
+  return OK;
+}
+
+export async function importReferenceEntityRecords(): Promise<any> {
+  const methodName: string = 'importReferenceEntityRecords';
+  logger.info({ moduleName, methodName }, 'Starting...');
+
+  const fileName: string = path.join(exportPath, filenameReferenceEntityRecords);
+  const fileDesc: number = await open(fileName, 'r');
+  const buffer: string = (await read(fileDesc)).toString().replace(/\n/gi, ', ').slice(0, -2);
+  await close(fileDesc);
+  if (buffer.length > 0) {
+    const referenceEntityRecords: ReferenceEntityRecord[] = JSON.parse(`[ ${buffer} ]`);
+    if (referenceEntityRecords.length > 0) {
+      let referenceEntityData: ReferenceEntityRecord[] = [];
+      let referenceEntityCode: string = referenceEntityRecords[0].delete_reference_entity_code || '';
+      let count: number = 0;
+      for (let i = 0; i < referenceEntityRecords.length; i++) {
+        if (referenceEntityCode !== referenceEntityRecords[i].delete_reference_entity_code ||
+            (count > 0 && count % patchLimit === 0) ||
+            (i + 1) === referenceEntityRecords.length) {
+          const results = await patch(`${apiUrlReferenceEntityRecords(referenceEntityCode)}`,
+                                      referenceEntityData);
+          // logger.info({ moduleName, methodName, results });
+          referenceEntityCode = referenceEntityRecords[i].delete_reference_entity_code || '';
+          referenceEntityData = [];
+          count = 0;
+        }
+        delete referenceEntityRecords[i].delete_reference_entity_code;
+        referenceEntityData.push(referenceEntityRecords[i]);
+        count++;
+      }
+    }
+  }
+  return OK;
+}
 
 export async function exportAssociationTypes(): Promise<any> {
   const methodName: string = 'exportAssociationTypes';
@@ -674,7 +802,6 @@ export async function exportProductModels(): Promise<any> {
 }
 
 // TODO: export function exportPublishedProduct(): Promise<any>
-
 // TODO: export function exportProductMediaFile(): Promise<any>
 
 export async function exportReferenceEntities(): Promise<any> {
@@ -697,6 +824,14 @@ export async function exportReferenceEntities(): Promise<any> {
     }
   }
 
+  try {
+    await unlink(path.join(exportPath, filenameReferenceEntityRecords));
+  } catch (err) {
+    if (err.code !== 'ENOENT') {
+      logger.error({ moduleName, methodName, err });
+    }
+  }
+
   let referenceEntities: ReferenceEntity[];
   try {
     referenceEntities = await get(apiUrlReferenceEntities());
@@ -713,6 +848,12 @@ export async function exportReferenceEntities(): Promise<any> {
       await write(fileDesc, Buffer.from(JSON.stringify(referenceEntity) + '\n'));
       try {
         await exportReferenceEntityAttributes(referenceEntity.code);
+      } catch (err) {
+        logger.info({ moduleName, methodName, err });
+        return err;
+      }
+      try {
+        await exportReferenceEntityRecords(referenceEntity.code);
       } catch (err) {
         logger.info({ moduleName, methodName, err });
         return err;
@@ -740,8 +881,8 @@ export async function exportReferenceEntityAttributes(referenceEntityCode: strin
     const fileName: string = path.join(exportPath, filenameReferenceEntityAttributes);
     const fileDesc: number = await open(fileName, 'a');
     for (const referenceEntityAttribute of referenceEntityAttributes) {
-      if (!(referenceEntityAttribute.reference_entity_code)) {
-        referenceEntityAttribute.reference_entity_code = referenceEntityCode;
+      if (!(referenceEntityAttribute.delete_reference_entity_code)) {
+        referenceEntityAttribute.delete_reference_entity_code = referenceEntityCode;
       }
       await write(fileDesc, Buffer.from(JSON.stringify(referenceEntityAttribute) + '\n'));
       if (referenceEntityAttribute.type === 'multiple_options' ||
@@ -780,13 +921,40 @@ export async function exportReferenceEntityAttributeOptions(referenceEntityCode:
     const fileName: string = path.join(exportPath, filenameReferenceEntityAttributeOptions);
     const fileDesc: number = await open(fileName, 'a');
     for (const referenceEntityAttributeOption of referenceEntityAttributeOptions) {
-      if (!(referenceEntityAttributeOption.reference_entity_code)) {
-        referenceEntityAttributeOption.reference_entity_code = referenceEntityCode;
+      if (!(referenceEntityAttributeOption.delete_reference_entity_code)) {
+        referenceEntityAttributeOption.delete_reference_entity_code = referenceEntityCode;
       }
-      if (!(referenceEntityAttributeOption.attribute_code)) {
-        referenceEntityAttributeOption.attribute_code = attributeCode;
+      if (!(referenceEntityAttributeOption.delete_attribute_code)) {
+        referenceEntityAttributeOption.delete_attribute_code = attributeCode;
       }
       await write(fileDesc, Buffer.from(JSON.stringify(referenceEntityAttributeOption) + '\n'));
+    }
+    await close(fileDesc);
+  }
+  return OK;
+}
+
+export async function exportReferenceEntityRecords(referenceEntityCode: string): Promise<any> {
+  const methodName: string = 'exportReferenceEntityRecords';
+  logger.info({ moduleName, methodName }, 'Starting...');
+
+  let referenceEntityRecords: ReferenceEntityRecord[];
+  try {
+    referenceEntityRecords = await get(apiUrlReferenceEntityRecords(referenceEntityCode));
+    logger.debug({ moduleName, methodName, referenceEntityRecords });
+  } catch (err) {
+    logger.info({ moduleName, methodName, err });
+    return err;
+  }
+  if (referenceEntityRecords !== null &&
+      typeof referenceEntityRecords[Symbol.iterator] === 'function') {
+    const fileName: string = path.join(exportPath, filenameReferenceEntityRecords);
+    const fileDesc: number = await open(fileName, 'a');
+    for (const referenceEntityRecord of referenceEntityRecords) {
+      if (!(referenceEntityRecord.delete_reference_entity_code)) {
+        referenceEntityRecord.delete_reference_entity_code = referenceEntityCode;
+      }
+      await write(fileDesc, Buffer.from(JSON.stringify(referenceEntityRecord) + '\n'));
     }
     await close(fileDesc);
   }
@@ -837,11 +1005,23 @@ async function main(): Promise<any> {
   await importAttributeGroups();
 
   await importFamilies();
-*/
+
   await importFamilyVariants();
-/*
+
   await importCategories();
+
+  await importProducts();
+
+  await importProductModels();
+
+  await importReferenceEntities();
+
+  await importReferenceEntityAttributes();
+
+  await importReferenceEntityAttributeOptions();
 */
+  await importReferenceEntityRecords();
+
   if (require.main === module) {
     setTimeout(() => { process.exit(0); }, 10000);
   }

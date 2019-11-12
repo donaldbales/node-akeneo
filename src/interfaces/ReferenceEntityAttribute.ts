@@ -2,6 +2,8 @@
 
 import { Label } from './Label';
 
+// NOTE: I had to add delete_reference_entity_code in order to track the parent
+//       entity.
 export interface ReferenceEntityAttribute {
   code: string;
   labels?: Label[];
@@ -20,4 +22,5 @@ export interface ReferenceEntityAttribute {
   decimals_allowed?: boolean;
   min_value?: string;
   max_value?: string;
+  delete_reference_entity_code?: string;
 }
