@@ -1,0 +1,22 @@
+{
+ "code":"examine_metric",
+ "type":"pim_catalog_metric",
+ "labels":{"de_DE":"Prüfen Metric",
+           "en_US":"Examine Metric",
+           "fr_FR":"Examiner Metric"},
+ "group":"examine",
+ "sort_order":0,
+ "localizable":true,
+ "scopable":true,
+ "available_locales":["de_DE",
+                      "en_US",
+                      "fr_FR"],
+ "unique":false,
+ "useable_as_grid_filter":true,
+ "number_min":"0.0010",
+ "number_max":"100000000.0000",
+ "decimals_allowed":true,
+ "negative_allowed":true,
+ "metric_family":"Length",
+ "default_metric_unit":"INCH"
+}

@@ -1,0 +1,14 @@
+{"code":"examine_multiselect_option_1",
+ "attribute":"examine_multiselect",
+ "sort_order":0,
+ "labels":{"de_DE":"Prüfen Multiselect Option 1",
+           "en_US":"Examine Multiselect Option 1",
+           "fr_FR":"Examiner Multiselect Option 1"}
+}
+{"code":"examine_multiselect_option_2",
+ "attribute":"examine_multiselect",
+ "sort_order":1,
+ "labels":{"de_DE":"Prüfen Multiselect Option 2",
+           "en_US":"Examine Multiselect Option 2",
+           "fr_FR":"Examiner Multiselect Option 2"}
+}

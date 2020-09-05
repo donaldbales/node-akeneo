@@ -1,0 +1,18 @@
+{"code":"examine_price_collection",
+ "type":"pim_catalog_price_collection",
+ "labels":{"de_DE":"Prüfen Price Collection",
+           "en_US":"Examine Price Collection",
+           "fr_FR":"Examiner Price Collection"},
+ "group":"examine",
+ "sort_order":0,
+ "localizable":true,
+ "scopable":true,
+ "available_locales":["de_DE",
+                      "en_US",
+                      "fr_FR"],
+ "unique":false,
+ "useable_as_grid_filter":true,
+ "number_min":"0.0100",
+ "number_max":"1000000.0000",
+ "decimals_allowed":true
+}

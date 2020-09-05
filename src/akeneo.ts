@@ -1073,9 +1073,9 @@ async function main(): Promise<any> {
   await exportCurrencies();
 
   await exportMeasureFamilies();
-
+*/
   await exportAttributes();
-
+/*
   await exportAttributeGroups();
 
   await exportAssociationTypes();
@@ -1117,14 +1117,13 @@ async function main(): Promise<any> {
   await importReferenceEntityAttributeOptions();
 
   await importReferenceEntityRecords();
-*/
 
-//  await exportAssets();
+  await exportAssets();
 
-//  await exportAssetCategories();
+  await exportAssetCategories();
 
   await exportAssetTags();
-
+*/
   if (require.main === module) {
     setTimeout(() => { process.exit(0); }, 10000);
   }

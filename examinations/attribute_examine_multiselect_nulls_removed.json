@@ -1,0 +1,18 @@
+{
+ "code":"examine_multiselect",
+ "type":"pim_catalog_multiselect",
+ "labels":{"de_DE":"Prüfen Multiselect",
+           "en_US":"Examine Multiselect",
+           "fr_FR":"Examiner Multiselect"},
+ "group":"examine",
+ "sort_order":0,
+ "localizable":true,
+ "scopable":true,
+ "available_locales":["de_DE",
+                      "en_US",
+                      "fr_FR"],
+ "unique":false,
+ "useable_as_grid_filter":true,
+ "minimum_input_length":3,
+ "auto_option_sorting":true
+}

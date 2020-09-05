@@ -1,0 +1,18 @@
+{
+ "code":"examine_date",
+ "type":"pim_catalog_date",
+ "labels":{"de_DE":"Prüfen Date",
+           "en_US":"Examine Date",
+           "fr_FR":"Examiner Date"},
+ "group":"examine",
+ "sort_order":0,
+ "localizable":true,
+ "scopable":true,
+ "available_locales":["de_DE",
+                      "en_US",
+                      "fr_FR"],
+ "unique":false,
+ "useable_as_grid_filter":true,
+ "date_min":"1900-01-01T00:00:00+00:00",
+ "date_max":"9999-12-31T00:00:00+00:00"
+}

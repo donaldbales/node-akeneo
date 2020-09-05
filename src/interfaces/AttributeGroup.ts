@@ -6,5 +6,5 @@ export interface AttributeGroup {
   code: string;
   sort_order?: number;
   attributes?: string[];
-  labels?: Label[];
+  labels?: Label;
 }

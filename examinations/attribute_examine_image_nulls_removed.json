@@ -1,0 +1,20 @@
+{
+ "code":"examine_image",
+ "type":"pim_catalog_image",
+ "labels":{"de_DE":"Prüfen Image",
+           "en_US":"Examine Image",
+           "fr_FR":"Examiner Image"},
+ "group":"examine",
+ "sort_order":0,
+ "localizable":true,
+ "scopable":true,
+ "available_locales":["de_DE",
+                      "en_US",
+                      "fr_FR"],
+ "unique":false,
+ "useable_as_grid_filter":true,
+ "allowed_extensions":["jpg",
+                       "pdf",
+                       "png"],
+ "max_file_size":"9999.00"
+}

@@ -1,0 +1,18 @@
+{"code":"examine_text",
+ "type":"pim_catalog_text",
+ "labels":{"de_DE":"Prüfen Text",
+           "en_US":"Examine Text",
+           "fr_FR":"Examiner Text"},
+ "group":"examine",
+ "sort_order":0,
+ "localizable":true,
+ "scopable":true,
+ "available_locales":["de_DE",
+                      "en_US",
+                      "fr_FR"],
+ "unique":false,
+ "useable_as_grid_filter":true,
+ "max_characters":80,
+ "validation_rule":"regexp",
+ "validation_regexp":"/[A-Z][a-z][0-9]/"
+}

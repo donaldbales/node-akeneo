@@ -5,7 +5,7 @@ import { Label } from './Label';
 export interface Attribute {
   code: string;
   type: string;
-  labels?: Label[];
+  labels: Label;
   group: string;
   sort_order?: number;
   localizable?: boolean;
@@ -28,4 +28,6 @@ export interface Attribute {
   allowed_extensions?: string[];
   max_file_size?: string;
   reference_data_name?: string;
+  minimum_input_length?: number;
+  auto_option_sorting?: boolean;
 }
