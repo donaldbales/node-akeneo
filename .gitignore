@@ -1,3 +1,8 @@
+.DS_Store
+*.txt
+data
+runlocal
+
 # Logs
 logs
 *.log
