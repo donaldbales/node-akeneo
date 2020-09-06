@@ -5,5 +5,5 @@ import { Label } from './Label';
 export interface AssetCategory {
   code: string;
   parent?: string;
-  labels?: Label[];
+  labels?: Label;
 }

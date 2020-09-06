@@ -9,5 +9,5 @@ export interface Family {
   attribute_as_image?: string;
   attributes?: string[];
   attributes_requirements?: AttributeRequirement;
-  labels?: Label[];
+  labels?: Label;
 }

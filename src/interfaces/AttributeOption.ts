@@ -6,5 +6,5 @@ export interface AttributeOption {
   code: string;
   attribute?: string;
   sort_order?: number;
-  labels?: Label[];
+  labels?: Label;
 }

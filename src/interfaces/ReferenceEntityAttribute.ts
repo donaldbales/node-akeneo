@@ -6,7 +6,7 @@ import { Label } from './Label';
 //       entity.
 export interface ReferenceEntityAttribute {
   code: string;
-  labels?: Label[];
+  labels?: Label;
   type: string;
   value_per_locale?: boolean;
   value_per_channel?: boolean;

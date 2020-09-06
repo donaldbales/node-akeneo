@@ -8,6 +8,6 @@ import { VariantAttributeSet } from './VariantAttributeSet';
 export interface FamilyVariant {
   code: string;
   variant_attribute_sets: VariantAttributeSet[];
-  labels?: Label[];
+  labels?: Label;
   family?: string;
 }

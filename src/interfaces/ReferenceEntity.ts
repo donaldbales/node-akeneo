@@ -4,6 +4,6 @@ import { Label } from './Label';
 
 export interface ReferenceEntity {
   code: string;
-  labels?: Label[];
+  labels?: Label;
   image?: string;
 }

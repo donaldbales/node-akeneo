@@ -5,5 +5,5 @@ import { Label } from './Label';
 export interface Category {
   code: string;
   parent?: string;
-  labels?: Label[];
+  labels?: Label;
 }

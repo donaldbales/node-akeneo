@@ -4,5 +4,5 @@ import { Label } from './Label';
 
 export interface AssociationType {
   code: string;
-  labels?: Label[];
+  labels?: Label;
 }

@@ -8,5 +8,5 @@ export interface Channel {
   locales: string[];
   currencies: string[];
   conversion_units: ConversionUnit;
-  labels?: Label[];
+  labels?: Label;
 }

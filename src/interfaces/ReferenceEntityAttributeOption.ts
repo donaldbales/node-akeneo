@@ -6,7 +6,7 @@ import { Label } from './Label';
 //       otherwise it would not identify it's parent relationship correctly.
 export interface ReferenceEntityAttributeOption {
   code: string;
-  labels?: Label[];
+  labels?: Label;
   delete_reference_entity_code: string;
   delete_attribute_code: string;
 }

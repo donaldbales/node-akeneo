@@ -1,0 +1,17 @@
+{
+ "code":"examine_2_text",
+ "type":"pim_catalog_text",
+ "labels":{"en_US":"Examine 2 Text",
+           "fr_FR":"Examiner 2 Text",
+           "de_DE":"Prufen 2 Text"},
+ "group":"examine_2",
+ "sort_order":0,
+ "localizable":false,
+ "scopable":false,
+ "available_locales":[],
+ "unique":false,
+ "useable_as_grid_filter":false,
+ "max_characters":null,
+ "validation_rule":null,
+ "validation_regexp":null
+}
