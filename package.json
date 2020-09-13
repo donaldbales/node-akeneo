@@ -10,11 +10,13 @@
   "license": "GPL-3.0-or-later",
   "dependencies": {
     "@types/bunyan": "^1.8.6",
+    "@types/minimist": "^1.2.0",
     "@types/node": "^10.14.17",
     "@types/nodemailer": "^4.6.6",
     "@types/qs": "^6.5.3",
     "axios": "^0.18.1",
     "bunyan": "^1.8.12",
+    "minimist": "^1.2.5",
     "nodemailer": "^5.1.1",
     "qs": "^6.9.0",
     "tslint": "^5.11.0",

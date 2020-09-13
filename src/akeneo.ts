@@ -1073,17 +1073,17 @@ async function main(): Promise<any> {
   await exportCurrencies();
 
   await exportMeasureFamilies();
-*/
+
   await exportAttributes();
-/*
+
   await exportAttributeGroups();
 
   await exportAssociationTypes();
 
   await exportCategories();
-
+*/
   await exportFamilies();
-
+/*
   await exportProducts();
 
   await exportProductModels();
