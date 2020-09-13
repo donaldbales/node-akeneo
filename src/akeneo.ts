@@ -871,7 +871,14 @@ export async function importChannels(): Promise<any> {
   return OK;
 }
 
-// N/A: export async function importCurrencies(): Promise<any> {
+export async function importCurrencies(): Promise<any> {
+  const methodName: string = 'importCurrencies';
+  logger.info({ moduleName, methodName }, 'Starting...');
+  logger.error({ moduleName, methodName }, 
+    'Akeneo PIM does not support the import of currencies. ' +
+    'Currencies are installed by: bin/console pim:installer:db.');
+  return OK;
+}
 
 export async function importFamilies(): Promise<any> {
   const methodName: string = 'importFamilies';
@@ -920,8 +927,23 @@ export async function importFamilyVariants(): Promise<any> {
   return OK;
 }
 
-// N/A: export async function importLocales(): Promise<any> {
-// N/A: export async function importMeasureFamilies(): Promise<any> {
+export async function importLocales(): Promise<any> {
+  const methodName: string = 'importCurrencies';
+  logger.info({ moduleName, methodName }, 'Starting...');
+  logger.error({ moduleName, methodName }, 
+    'Akeneo PIM does not support the import of locales. ' +
+    'Locales are installed by: bin/console pim:installer:db.');
+  return OK;
+}
+
+export async function importMeasureFamilies(): Promise<any> {
+  const methodName: string = 'importCurrencies';
+  logger.info({ moduleName, methodName }, 'Starting...');
+  logger.error({ moduleName, methodName }, 
+    'Akeneo PIM does not support the import of measure families. ' +
+    'Measure Families are installed by: bin/console pim:installer:db.');
+  return OK;
+}
 
 export async function importProducts(): Promise<any> {
   const methodName: string = 'importProducts';
@@ -1090,6 +1112,12 @@ async function main(): Promise<any> {
 
   await exportReferenceEntities();
 
+  await exportAssets();
+
+  await exportAssetCategories();
+
+  await exportAssetTags();
+
   await importAssociationTypes();
 
   await importChannels();
@@ -1117,12 +1145,6 @@ async function main(): Promise<any> {
   await importReferenceEntityAttributeOptions();
 
   await importReferenceEntityRecords();
-
-  await exportAssets();
-
-  await exportAssetCategories();
-
-  await exportAssetTags();
 */
   if (require.main === module) {
     setTimeout(() => { process.exit(0); }, 10000);
