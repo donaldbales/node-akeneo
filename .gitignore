@@ -1,6 +1,7 @@
-.DS_Store
+**.DS_Store
 *.txt
 data
+code_writer.xlsx
 runlocal
 
 # Logs
