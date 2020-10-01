@@ -1,0 +1,10 @@
+{"code":"referenceentityimageattribute",
+ "labels":{"en_US":"Reference Entity Image Attribute With Values Per Channel and Locale"},
+ "type":"image",
+ "value_per_locale":true,
+ "value_per_channel":true,
+ "is_required_for_completeness":false,
+ "max_file_size":null,
+ "allowed_extensions":["jpg",
+ "png"],
+ "delete_reference_entity_code":"referenceentitycode"}

@@ -32,7 +32,7 @@ const logger: any = getLogger('nodeakeneo');
 const moduleName: string = 'akeneo';
 
 const exportPath: string = (process.env.AKENEO_EXPORT_PATH as string) || '.';
-const patchLimit: number = Number.parseInt((process.env.AKENEO_PATCH_LIMIT as string) || '100', 10);
+export const patchLimit: number = Number.parseInt((process.env.AKENEO_PATCH_LIMIT as string) || '100', 10);
 const OK: any = { status: 'OK' };
 
 const filenameAssociationTypes: string = 'associationTypes.json';
@@ -132,16 +132,36 @@ export function apiUrlMeasureFamilies(): string {
 
 // Reference Entities
 
-export function apiUrlReferenceEntities(): string {
-  return '/api/rest/v1/reference-entities';
+export function apiUrlReferenceEntities(referenceEntityCode: string = ''): string {
+  if (referenceEntityCode) {
+    return `/api/rest/v1/reference-entities/${referenceEntityCode}`;
+  } else {
+    return '/api/rest/v1/reference-entities';
+  }
 }
 
-export function apiUrlReferenceEntityAttributes(referenceEntityCode: string): string {
-  return `/api/rest/v1/reference-entities/${referenceEntityCode}/attributes`;
+export function apiUrlReferenceEntityAttributes(
+  referenceEntityCode: string,
+  referenceEntityAttributeCode: string = ''): string {
+  if (referenceEntityAttributeCode) {
+    return `/api/rest/v1/reference-entities/${referenceEntityCode}/attributes/${referenceEntityAttributeCode}`;
+  } else {
+    return `/api/rest/v1/reference-entities/${referenceEntityCode}/attributes`;
+  }
 }
 
-export function apiUrlReferenceEntityAttributeOptions(referenceEntityCode: string, attributeCode: string) {
-  return `/api/rest/v1/reference-entities/${referenceEntityCode}/attributes/${attributeCode}/options`;
+export function apiUrlReferenceEntityAttributeOptions(
+  referenceEntityCode: string,
+  referenceEntityAttributeCode: string,
+  referenceEntityAttributeOptionCode: string = '') {
+  if (referenceEntityAttributeOptionCode) {
+    return `/api/rest/v1/reference-entities/${referenceEntityCode}` +
+           `/attributes/${referenceEntityAttributeCode}` +
+           `/options/${referenceEntityAttributeOptionCode}`;
+  } else {
+    return `/api/rest/v1/reference-entities/${referenceEntityCode}` +
+           `/attributes/${referenceEntityAttributeCode}/options`;
+  }
 }
 
 export function apiUrlReferenceEntityRecords(referenceEntityCode: string): string {

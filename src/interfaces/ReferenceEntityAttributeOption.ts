@@ -7,6 +7,6 @@ import { Label } from './Label';
 export interface ReferenceEntityAttributeOption {
   code: string;
   labels?: Label;
-  delete_reference_entity_code: string;
-  delete_attribute_code: string;
+  delete_reference_entity_code?: string;
+  delete_attribute_code?: string;
 }

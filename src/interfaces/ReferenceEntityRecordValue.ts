@@ -1,9 +1,9 @@
 export interface ChannelLocaleData {
-  channel: string;
-  locale: string;
+  channel: string | null;
+  locale: string | null;
   data: any;
 }
 
 export interface ReferenceEntityRecordValue {
-  [attribueCode: string]: ChannelLocaleData[];
+  [attribueCode: string]: ChannelLocaleData;
 }

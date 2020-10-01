@@ -1,4 +1,6 @@
 import axios, { AxiosPromise, AxiosRequestConfig, AxiosResponse } from 'axios';
+import * as FormData from 'form-data';
+import * as fs from 'fs';
 import * as qs from 'qs';
 import * as util from 'util';
 
@@ -177,56 +179,7 @@ export async function patch(apiUrl: string, data: any): Promise<any> {
     logger.info({ moduleName, methodName, err });
     return err;
   }
-/*
-  let data: string[] = [];
-  for (let i = 0; i < docs.length; i++) {
-    data.push(`${JSON.stringify(docs[i])}`);
 
-    if ((1 + i) % patchLimit === 0 ||
-         1 + i === docs.length) {
-      // console.log(`\n\n${data}\n\n`);
-      try {
-        const buffer: Buffer = Buffer.from(data.join('\n'));
-        response = await axios.patch(url, buffer, options);
-        logger.trace({ moduleName, methodName }, `response=\n${inspect(response)}`);
-
-        const pageResponse = response.data ? response.data : {};
-        logger.trace({ moduleName, methodName }, `pageResponse=\n${pageResponse}`);
-
-        if (pageResponse) {
-          let lines: any[] = [];
-          try {
-            if (typeof(pageResponse) === 'object') {
-              lines = JSON.parse(`[ ${JSON.stringify(pageResponse)} ]`);
-            } else {
-              lines = JSON.parse(`[ ${pageResponse.replace(/\n/gi, ', ')} ]`);
-            }
-            // console.log(lines);
-          } catch (err) {
-            logger.warn({ moduleName, methodName, err, pageResponse}, `Converting response into lines.`);
-            lines = [];
-          }
-          if (lines.length !== data.length) {
-            logger.warn({ moduleName, methodName, data: data.length, lines: lines.length }, `line count difference!`);
-          }
-          for (let j = 0; j < lines.length; j++) {
-            if (lines[j] && lines[j].status_code && lines[j].status_code >= 300) {
-              / tslint:disable:object-literal-sort-keys /
-              logger.info({ moduleName, methodName,
-                line: JSON.parse(JSON.stringify(lines[j])),
-                data: JSON.parse(data[j]) });
-              / tslint:enable:object-literal-sort-keys /
-            }
-          }
-        }
-      } catch (err) {
-        logger.info({ moduleName, methodName, err });
-        return err;
-      }
-      data = [];
-    }
-  }
-*/
   return results;
 }
 
@@ -295,13 +248,77 @@ export async function patchVndAkeneoCollection(apiUrl: string, docs: any[]): Pro
   return results;
 }
 
+export async function postMultipartFormData(path: string, stream: any): Promise<any> {
+  const methodName: string = 'postMultipartFormData';
+  logger.info({ moduleName, methodName, apiUrl: path, stream: stream.length }, `Starting...`);
+
+  const accessToken: string = await getToken();
+  const splitBaseUrl: any[] = baseUrl.split('/') 
+  const host: string = splitBaseUrl[2];
+  const protocol: string = splitBaseUrl[0];
+  // console.log(`${protocol}//${host}`);
+
+  return new Promise((resolve, reject) => {
+    const form: any = new FormData();
+    form.append('file', stream);
+    form.submit({
+      protocol,
+      host,
+      path,
+      headers: { 'Authorization': `Bearer ${accessToken}` }
+    }, (err: any, res: any) => {
+      if (err) {
+        logger.error({ moduleName, methodName, apiUrl: path, error: inspect(err) }, `Error`);
+        reject(err);
+      } else {
+        for (const property in res) {
+          if (res.hasOwnProperty(property)) {
+            logger.info({ moduleName, methodName, apiUrl: path, property, value: res[property] });
+          }
+        }
+      
+        const headers = res.headers;
+        if (headers['location']) {
+          const location = headers['location'];
+          logger.info({ moduleName, methodName, apiUrl: path, location });
+        }
+        let assetMediaFileCode: string = '';
+        if (headers['asset-media-file-code']) {
+          assetMediaFileCode = headers['asset-media-file-code'];
+          logger.info({ moduleName, methodName, apiUrl: path, assetMediaFileCode });
+        }
+        let referenceEntitiesMediaFileCode: string = '';
+        if (headers['reference-entities-media-file-code']) {
+          referenceEntitiesMediaFileCode = headers['reference-entities-media-file-code'];
+          logger.info({ moduleName, methodName, apiUrl: path, referenceEntitiesMediaFileCode });
+        }
+        const statusCode: number = res.statusCode;
+        logger.info({ moduleName, methodName, apiUrl: path, statusCode });
+        const statusMessage: string = res.statusMessage;
+        logger.info({ moduleName, methodName, apiUrl: path, statusMessage });
+        if (statusCode !== 201) {
+          reject(`${statusCode}: ${statusMessage}`);
+        } else
+        if (assetMediaFileCode) {
+          resolve(assetMediaFileCode);
+        } else
+        if (referenceEntitiesMediaFileCode) {
+          resolve(referenceEntitiesMediaFileCode);
+        } else {
+          resolve('');
+        }
+      }
+    });
+  });
+}
+
 // A main method with no command line parameter management
 async function main(): Promise<any> {
   const methodName: string = 'main';
   logger.info({ moduleName, methodName }, `Starting...`);
 
   let unUsedLocal: any;
-
+/*
   unUsedLocal = await getToken();
   logger.info({ moduleName, methodName, unUsedLocal });
 
@@ -313,7 +330,12 @@ async function main(): Promise<any> {
 
   unUsedLocal = await patch('/api/rest/v1/attributes', unUsedLocal);
   logger.info({ moduleName, methodName, unUsedLocal });
-
+*/
+  const stream = fs.createReadStream('./akeneo.png');
+  unUsedLocal = await postMultipartFormData('/api/rest/v1/reference-entities-media-files', stream);
+  
+  logger.info({ moduleName, methodName, unUsedLocal });  
+  
   if (require.main === module) {
     setTimeout(() => { process.exit(0); }, 10000);
   }
@@ -325,3 +347,5 @@ async function main(): Promise<any> {
 if (require.main === module) {
   main();
 }
+
+// https://stackoverflow.com/questions/19818918/nodejs-sending-uploading-a-local-file-to-a-remote-server
