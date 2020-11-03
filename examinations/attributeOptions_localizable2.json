@@ -1,0 +1,3 @@
+{"code":"one","attribute":"multiselect_localizable","sort_order":0,"labels":{"en_CA":"One CA","en_GB":"One GB","en_US":"One US","es_US":"Uno US"}}
+{"code":"two","attribute":"multiselect_localizable","sort_order":1,"labels":{"en_CA":"Two CA","en_GB":"Two GB","en_US":"Two US","es_US":"Dos US"}}
+{"code":"three","attribute":"simpleselect_localizable","sort_order":0,"labels":{"en_CA":"Three CA","en_GB":"Three GB","en_US":"Three US","es_US":"Tres US"}}

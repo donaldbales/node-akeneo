@@ -1,8 +1,9 @@
 **.DS_Store
 *.txt
-data
 code_writer.xlsx
+data
 runlocal
+setenv
 
 # Logs
 logs

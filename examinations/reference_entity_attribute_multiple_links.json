@@ -1,0 +1,17 @@
+{
+"code":"referenceentitymultiplelinks",
+
+"labels":{"en_US":"Reference Entity Multiple Links"},
+
+"type":"reference_entity_multiple_links",
+
+"value_per_locale":false,
+
+"value_per_channel":false,
+
+"is_required_for_completeness":false,
+
+"reference_entity_code":"referenceentitycode",
+
+"delete_reference_entity_code":"referenceentitycode"
+}

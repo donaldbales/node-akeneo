@@ -1,0 +1,16 @@
+{
+"code":"one",
+"attribute":"simpleselect_with_values_per_locale",
+"sort_order":0,
+"labels":{"en_CA":"One CA",
+"en_GB":"One GB",
+"en_US":"One US",
+"es_US":"Uno US"}}
+{
+"code":"two",
+"attribute":"simpleselect_with_values_per_locale",
+"sort_order":1,
+"labels":{"en_CA":"Two CA",
+"en_GB":"Two GB",
+"en_US":"Two US",
+"es_US":"Duo US"}}
