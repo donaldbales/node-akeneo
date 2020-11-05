@@ -1,6 +1,6 @@
 {
   "name": "nodeakeneo",
-  "version": "1.0.0",
+  "version": "1.4.0",
   "description": "A set of Node modules to import data into Akeneo using its web-api",
   "main": "index.js",
   "scripts": {

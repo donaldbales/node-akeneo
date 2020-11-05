@@ -1,13 +1,21 @@
+// src/akeneo.ts
+
 import * as fs from 'fs';
 import * as path from 'path';
 import * as util from 'util';
 
-import { get, patch, patchVndAkeneoCollection } from './http';
+import { get, patch, patchVndAkeneoCollection, postMultipartFormData } from './http';
+import { AssetFamily } from './interfaces/AssetFamily';
+import { AssetFamilyAttribute } from './interfaces/AssetFamilyAttribute';
+import { AssetFamilyAttributeOption } from './interfaces/AssetFamilyAttributeOption';
+import { AssetFamilyAsset } from './interfaces/AssetFamilyAsset';
+
 import { Asset } from './interfaces/Asset';
 import { AssetCategory } from './interfaces/AssetCategory';
 import { AssetReferenceFile } from './interfaces/AssetReferenceFile';
 import { AssetTag } from './interfaces/AssetTag';
 import { AssetVariationFile } from './interfaces/AssetVariationFile';
+
 import { AssociationType } from './interfaces/AssociationType';
 import { Attribute } from './interfaces/Attribute';
 import { AttributeGroup } from './interfaces/AttributeGroup';
@@ -27,13 +35,66 @@ import { ReferenceEntityAttributeOption } from './interfaces/ReferenceEntityAttr
 import { ReferenceEntityRecord } from './interfaces/ReferenceEntityRecord';
 
 import { getLogger } from './logger';
-const logger: any = getLogger('nodeakeneo');
 
 const moduleName: string = 'akeneo';
 
+const logger: any = getLogger(moduleName);
+
 const exportPath: string = (process.env.AKENEO_EXPORT_PATH as string) || '.';
-export const patchLimit: number = Number.parseInt((process.env.AKENEO_PATCH_LIMIT as string) || '100', 10);
+
 const OK: any = { status: 'OK' };
+
+export const patchLimit: number = Number.parseInt((process.env.AKENEO_PATCH_LIMIT as string) || '100', 10);
+
+export const AKENEO_CATEGORIES: string = 'categories';
+
+export const AKENEO_REFERENCE_ENTITY: string            = 'akeneo_reference_entity';
+export const AKENEO_REFERENCE_ENTITY_COLLECTION: string = 'akeneo_reference_entity_collection';
+export const PIM_CATALOG_ASSET_COLLECTION: string       = 'pim_catalog_asset_collection';      
+export const PIM_CATALOG_BOOLEAN: string                = 'pim_catalog_boolean';
+export const PIM_CATALOG_DATE: string                   = 'pim_catalog_date';
+export const PIM_CATALOG_FILE: string                   = 'pim_catalog_file';
+export const PIM_CATALOG_IDENTIFIER: string             = 'pim_catalog_identifier';
+export const PIM_CATALOG_IMAGE: string                  = 'pim_catalog_image';
+export const PIM_CATALOG_METRIC: string                 = 'pim_catalog_metric';
+export const PIM_CATALOG_MULTISELECT: string            = 'pim_catalog_multiselect';
+export const PIM_CATALOG_NUMBER: string                 = 'pim_catalog_number';
+export const PIM_CATALOG_PRICE_COLLECTION: string       = 'pim_catalog_price_collection';
+export const PIM_CATALOG_SIMPLESELECT: string           = 'pim_catalog_simpleselect';
+export const PIM_CATALOG_TEXT: string                   = 'pim_catalog_text';
+export const PIM_CATALOG_TEXTAREA: string               = 'pim_catalog_textarea';
+export const PIM_REFERENCE_DATA_MULTISELECT: string     = 'pim_reference_data_multiselect';
+export const PIM_REFERENCE_DATA_SIMPLESELECT: string    = 'pim_reference_data_simpleselect';
+
+export const ATTRIBUTE_TYPES: Set<string> = new Set([
+  AKENEO_REFERENCE_ENTITY,
+  AKENEO_REFERENCE_ENTITY_COLLECTION,
+  PIM_CATALOG_ASSET_COLLECTION,
+  PIM_CATALOG_BOOLEAN,
+  PIM_CATALOG_DATE,
+  PIM_CATALOG_FILE,
+//  PIM_CATALOG_IDENTIFIER, there can be only one identifier
+  PIM_CATALOG_IMAGE,
+  PIM_CATALOG_METRIC,
+  PIM_CATALOG_MULTISELECT,
+  PIM_CATALOG_NUMBER,
+  PIM_CATALOG_PRICE_COLLECTION,
+  PIM_CATALOG_SIMPLESELECT,
+  PIM_CATALOG_TEXT,
+  PIM_CATALOG_TEXTAREA,
+  PIM_REFERENCE_DATA_MULTISELECT,
+  PIM_REFERENCE_DATA_SIMPLESELECT
+]);
+
+export const REFERENCE_ENTITY_IMAGE: string = 'image';
+export const REFERENCE_ENTITY_MULTIPLE_OPTIONS: string = 'multiple_options';
+export const REFERENCE_ENTITY_NUMBER: string = 'number';
+export const REFERENCE_ENTITY_MULTIPLE_LINKS: string = 'reference_entity_multiple_links';
+export const REFERENCE_ENTITY_SINGLE_LINK: string = 'reference_entity_single_link';
+export const REFERENCE_ENTITY_SINGLE_OPTION: string = 'single_option';
+export const REFERENCE_ENTITY_TEXT: string = 'text';
+// Yes, I know, there isn't a textarea type, it's text + textarea boolean, but I need to differentiate
+export const REFERENCE_ENTITY_TEXTAREA: string = 'textarea';
 
 const filenameAssociationTypes: string = 'associationTypes.json';
 const filenameAttributes: string = 'attributes.json';
@@ -48,15 +109,24 @@ const filenameLocales: string = 'locales.json';
 const filenameMeasureFamilies: string = 'measureFamilies.json';
 const filenameProducts: string = 'products.json';
 const filenameProductModels: string = 'productModels.json';
+
 const filenameReferenceEntities: string = 'referenceEntities.json';
 const filenameReferenceEntityAttributes: string = 'referenceEntityAttributes.json';
 const filenameReferenceEntityAttributeOptions: string = 'referenceEntityAttributeOptions.json';
 const filenameReferenceEntityRecords: string = 'referenceEntityRecords.json';
+
+const filenameAssetFamilies: string = 'assetFamilies.json';
+const filenameAssetFamilyAttributes: string = 'assetFamilyAttributes.json';
+const filenameAssetFamilyAttributeOptions: string = 'assetFamilyAttributeOptions.json';
+const filenameAssetFamilyAssets: string = 'assetFamilyAssets.json';
+
+// v3 
 const filenameAssets: string = 'assets.json';
 const filenameAssetCategories: string = 'assetCategories.json';
 const filenameAssetReferenceFiles: string = 'assetReferenceFiles.json';
 const filenameAssetTags: string = 'assetTags.json';
 const filenameAssetVariationFiles: string = 'assetVariationFiles.json';
+// end of v3
 
 const close: any = util.promisify(fs.close);
 const open: any = util.promisify(fs.open);
@@ -130,7 +200,7 @@ export function apiUrlMeasureFamilies(): string {
   return '/api/rest/v1/measure-families';
 }
 
-// Reference Entities
+/******************** R E F E R E N C E   E N T I T I E S ********************/
 
 export function apiUrlReferenceEntities(referenceEntityCode: string = ''): string {
   if (referenceEntityCode) {
@@ -172,6 +242,56 @@ export function apiUrlReferenceEntityMediaFiles(): string {
   return '/api/rest/v1/reference-entities-media-files';
 }
 
+/******************** A S S E T   F A M I L I E S ********************/
+
+export function apiUrlAssetFamilies(): string {
+  return '/api/rest/v1/asset-families';
+}
+
+export function apiUrlAssetFamilyAttributes(
+  assetFamilyCode: string,
+  assetFamilyAttributeCode: string = ''): string {
+  if (assetFamilyAttributeCode) {
+    return `/api/rest/v1/asset-families/${assetFamilyCode}/attributes/${assetFamilyAttributeCode}`;
+  } else {
+    return `/api/rest/v1/asset-families/${assetFamilyCode}/attributes`;
+  }
+}
+
+export function apiUrlAssetFamilyAttributeOptions(
+  assetFamilyCode: string,
+  assetFamilyAttributeCode: string,
+  assetFamilyAttributeOptionCode: string = ''): string {
+  if (assetFamilyAttributeOptionCode) {
+    return `/api/rest/v1/asset-families/${assetFamilyCode}` +
+           `/attributes/${assetFamilyAttributeCode}` +
+           `/options/${assetFamilyAttributeOptionCode}`;
+  } else {
+    return `/api/rest/v1/asset-families/${assetFamilyCode}` +
+           `/attributes/${assetFamilyAttributeCode}` +
+           `/options`;
+  }
+}
+
+export function apiUrlAssetMediaFiles(assetFamilyAssetCode: string = ''): string {
+  if (assetFamilyAssetCode) {
+    return `/api/rest/v1/asset-media-files/${assetFamilyAssetCode}`;
+  } else {
+    return `/api/rest/v1/asset-media-files`;
+  }
+}
+
+export function apiUrlAssetFamilyAssets(
+  assetFamilyCode: string,
+  assetFamilyAssetCode: string = ''): string {
+  if (assetFamilyAssetCode) {
+    return `/api/rest/v1/asset-families/${assetFamilyCode}/assets/${assetFamilyAssetCode}`;
+  } else {
+    return `/api/rest/v1/asset-families/${assetFamilyCode}/assets`;
+  }
+}
+
+// v3
 // PAM
 
 export function apiUrlAssets(): string {
@@ -193,6 +313,8 @@ export function apiUrlAssetCategories(): string {
 export function apiUrlAssetTags(): string {
   return '/api/rest/v1/asset-tags';
 }
+
+// end of v3
 
 export async function exportAssociationTypes(): Promise<any> {
   const methodName: string = 'exportAssociationTypes';
@@ -540,6 +662,8 @@ export async function exportProductModels(): Promise<any> {
 // TODO: export function exportPublishedProduct(): Promise<any>
 // TODO: export function exportProductMediaFile(): Promise<any>
 
+/******************** R E F E R E N C E   E N T I T I E S ********************/
+
 export async function exportReferenceEntities(): Promise<any> {
   const methodName: string = 'exportReferenceEntities';
   logger.info({ moduleName, methodName }, 'Starting...');
@@ -698,6 +822,167 @@ export async function exportReferenceEntityRecords(referenceEntityCode: string):
 }
 
 // TODO: export function exportReferenceEntityMediaFile(): Promise<any>
+
+/******************** A S S E T   F A M I L I E S ********************/
+
+export async function exportAssetFamilies(): Promise<any> {
+  const methodName: string = 'exportAssetFamilies';
+  logger.info({ moduleName, methodName }, 'Starting...');
+
+  try {
+    await unlink(path.join(exportPath, filenameAssetFamilyAttributes));
+  } catch (err) {
+    if (err.code !== 'ENOENT') {
+      logger.error({ moduleName, methodName, err });
+    }
+  }
+
+  try {
+    await unlink(path.join(exportPath, filenameAssetFamilyAttributeOptions));
+  } catch (err) {
+    if (err.code !== 'ENOENT') {
+      logger.error({ moduleName, methodName, err });
+    }
+  }
+
+  try {
+    await unlink(path.join(exportPath, filenameAssetFamilyAssets));
+  } catch (err) {
+    if (err.code !== 'ENOENT') {
+      logger.error({ moduleName, methodName, err });
+    }
+  }
+
+  let assetFamilies: AssetFamily[];
+  try {
+    assetFamilies = await get(apiUrlAssetFamilies());
+    logger.debug({ moduleName, methodName, assetFamilies });
+  } catch (err) {
+    logger.info({ moduleName, methodName, err });
+    return err;
+  }
+  if (assetFamilies !== null &&
+      typeof assetFamilies[Symbol.iterator] === 'function') {
+    const fileName: string = path.join(exportPath, filenameAssetFamilies);
+    const fileDesc: number = await open(fileName, 'w');
+    for (const assetFamily of assetFamilies) {
+      await write(fileDesc, Buffer.from(JSON.stringify(assetFamily) + '\n'));
+      try {
+        await exportAssetFamilyAttributes(assetFamily.code);
+      } catch (err) {
+        logger.info({ moduleName, methodName, err });
+        return err;
+      }
+      try {
+        await exportAssetFamilyAssets(assetFamily.code);
+      } catch (err) {
+        logger.info({ moduleName, methodName, err });
+        return err;
+      }
+    }
+    await close(fileDesc);
+  }
+  return OK;
+}
+
+export async function exportAssetFamilyAttributes(assetFamilyCode: string): Promise<any> {
+  const methodName: string = 'exportAssetFamilyAttributes';
+  logger.info({ moduleName, methodName }, 'Starting...');
+
+  let assetFamilyAttributes: AssetFamilyAttribute[];
+  try {
+    assetFamilyAttributes = await get(apiUrlAssetFamilyAttributes(assetFamilyCode));
+    logger.debug({ moduleName, methodName, assetFamilyAttributes });
+  } catch (err) {
+    logger.info({ moduleName, methodName, err });
+    return err;
+  }
+  if (assetFamilyAttributes !== null &&
+      typeof assetFamilyAttributes[Symbol.iterator] === 'function') {
+    const fileName: string = path.join(exportPath, filenameAssetFamilyAttributes);
+    const fileDesc: number = await open(fileName, 'a');
+    for (const assetFamilyAttribute of assetFamilyAttributes) {
+      if (!(assetFamilyAttribute.delete_asset_family_code)) {
+        assetFamilyAttribute.delete_asset_family_code = assetFamilyCode;
+      }
+      await write(fileDesc, Buffer.from(JSON.stringify(assetFamilyAttribute) + '\n'));
+      if (assetFamilyAttribute.type === 'multiple_options' ||
+          assetFamilyAttribute.type === 'single_option') {
+        try {
+          await exportAssetFamilyAttributeOptions(assetFamilyCode, assetFamilyAttribute.code);
+        } catch (err) {
+          logger.info({ moduleName, methodName, err });
+          return err;
+        }
+      }
+    }
+    await close(fileDesc);
+  }
+  return OK;
+}
+
+export async function exportAssetFamilyAttributeOptions(assetFamilyCode: string,
+                                                            attributeCode: string): Promise<any> {
+  const methodName: string = 'exportAssetFamilyAttributeOptions';
+  logger.info({ moduleName, methodName }, 'Starting...');
+
+  let assetFamilyAttributeOptions: AssetFamilyAttributeOption[] = [];
+  try {
+    assetFamilyAttributeOptions = await get(apiUrlAssetFamilyAttributeOptions(assetFamilyCode,
+                                                                                      attributeCode));
+    logger.debug({ moduleName, methodName, assetFamilyAttributeOptions });
+  } catch (err) {
+    if (err.code && err.code !== 404) {
+      logger.info({ moduleName, methodName, err });
+      return err;
+    }
+  }
+  if (assetFamilyAttributeOptions !== null &&
+      typeof assetFamilyAttributeOptions[Symbol.iterator] === 'function') {
+    const fileName: string = path.join(exportPath, filenameAssetFamilyAttributeOptions);
+    const fileDesc: number = await open(fileName, 'a');
+    for (const assetFamilyAttributeOption of assetFamilyAttributeOptions) {
+      if (!(assetFamilyAttributeOption.delete_asset_family_code)) {
+        assetFamilyAttributeOption.delete_asset_family_code = assetFamilyCode;
+      }
+      if (!(assetFamilyAttributeOption.delete_attribute_code)) {
+        assetFamilyAttributeOption.delete_attribute_code = attributeCode;
+      }
+      await write(fileDesc, Buffer.from(JSON.stringify(assetFamilyAttributeOption) + '\n'));
+    }
+    await close(fileDesc);
+  }
+  return OK;
+}
+
+export async function exportAssetFamilyAssets(assetFamilyCode: string): Promise<any> {
+  const methodName: string = 'exportAssetFamilyAssets';
+  logger.info({ moduleName, methodName }, 'Starting...');
+
+  let assetFamilyAssets: AssetFamilyAsset[];
+  try {
+    assetFamilyAssets = await get(apiUrlAssetFamilyAssets(assetFamilyCode));
+    logger.debug({ moduleName, methodName, assetFamilyAssets });
+  } catch (err) {
+    logger.info({ moduleName, methodName, err });
+    return err;
+  }
+  if (assetFamilyAssets !== null &&
+      typeof assetFamilyAssets[Symbol.iterator] === 'function') {
+    const fileName: string = path.join(exportPath, filenameAssetFamilyAssets);
+    const fileDesc: number = await open(fileName, 'a');
+    for (const assetFamilyAsset of assetFamilyAssets) {
+      if (!(assetFamilyAsset.delete_asset_family_code)) {
+        assetFamilyAsset.delete_asset_family_code = assetFamilyCode;
+      }
+      await write(fileDesc, Buffer.from(JSON.stringify(assetFamilyAsset) + '\n'));
+    }
+    await close(fileDesc);
+  }
+  return OK;
+}
+
+// TODO: export function exportAssetFamilyMediaFiles(): Promise<any>
 
 // TODO: PAM exports
 export async function exportAssets(): Promise<any> {
@@ -997,6 +1282,8 @@ export async function importProductModels(): Promise<any> {
   return OK;
 }
 
+/******************** R E F E R E N C E   E N T I T I E S ********************/
+
 export async function importReferenceEntities(): Promise<any> {
   const methodName: string = 'importReferenceEntities';
   logger.info({ moduleName, methodName }, 'Starting...');
@@ -1096,6 +1383,215 @@ export async function importReferenceEntityRecords(): Promise<any> {
   return OK;
 }
 
+export async function importReferenceEntityMediaFiles(referenceEntityCode: string, data: any[]): Promise<any[]> {
+  const methodName: string = 'importReferenceEntityMediaFiles';
+  logger.info({ moduleName, methodName }, `Starting...`);
+
+  const dirs: any[] = exportPath.split(path.sep);
+  dirs.push(referenceEntityCode);
+  let dirPath: string = '';
+  for (const dir of dirs) {
+    if (dir !== '.') {
+      dirPath += path.sep;
+      dirPath += dir;
+      try {
+        fs.mkdirSync(dirPath);
+      } catch (err) {
+        if (err.code !== 'EEXIST') {
+          throw err;
+        }
+      }
+    } else {
+      dirPath += dir;    
+    }
+    // console.log(dirPath);
+  }
+  
+  const results: any = {};
+  let referenceEntityMediaFileCode: string = '';
+  for (const datum of data) {
+    const code: string = datum.code;
+    try {
+      const stream: any = fs.createReadStream(`${dirPath}${path.sep}${code}.png`);
+      referenceEntityMediaFileCode = await postMultipartFormData(
+        apiUrlReferenceEntityMediaFiles(),
+        stream);
+        
+      const result: any = {
+        referenceEntityCode,
+        referenceEntityMediaFileCode
+      };
+      
+      results[code] = result;
+    } catch (err) {
+      logger.error({ moduleName, methodName, err }, `loading ${code}.png`);
+      process.exit(99);
+    }
+  }
+  const handle: any = await open(`${dirPath}${path.sep}referenceEntityMediaFilesMap.txt`, 'a');
+  for (const result of results) {
+    await write(handle, `${JSON.stringify(result).toString()}\n`);
+  }
+  await close(handle);
+  
+  return results;
+} 
+
+/******************** A S S E T   F A M I L I E S ********************/
+
+export async function importAssetFamilies(): Promise<any> {
+  const methodName: string = 'importAssetFamilies';
+  logger.info({ moduleName, methodName }, 'Starting...');
+
+  const fileName: string = path.join(exportPath, filenameAssetFamilies);
+  const fileDesc: number = await open(fileName, 'r');
+  const buffer: string = (await read(fileDesc)).toString().replace(/\n/gi, ', ').slice(0, -2);
+  await close(fileDesc);
+  if (buffer.length > 0) {
+    const assetFamilies: AssetFamily[] = JSON.parse(`[ ${buffer} ]`);
+    for (const assetFamily of assetFamilies) {
+      const results = await patch(`${apiUrlAssetFamilies()}/${assetFamily.code}`, assetFamily);
+      // logger.info({ moduleName, methodName, results });
+    }
+  }
+  return OK;
+}
+
+export async function importAssetFamilyAttributes(): Promise<any> {
+  const methodName: string = 'importAssetFamilyAttributes';
+  logger.info({ moduleName, methodName }, 'Starting...');
+
+  const fileName: string = path.join(exportPath, filenameAssetFamilyAttributes);
+  const fileDesc: number = await open(fileName, 'r');
+  const buffer: string = (await read(fileDesc)).toString().replace(/\n/gi, ', ').slice(0, -2);
+  await close(fileDesc);
+  if (buffer.length > 0) {
+    const assetFamilyAttributes: AssetFamilyAttribute[] = JSON.parse(`[ ${buffer} ]`);
+    for (const assetFamilyAttribute of assetFamilyAttributes) {
+      const assetFamilyCode: string = assetFamilyAttribute.delete_asset_family_code || '';
+      delete assetFamilyAttribute.delete_asset_family_code;
+      const results = await patch(
+        `${apiUrlAssetFamilyAttributes(assetFamilyCode)}/${assetFamilyAttribute.code}`,
+        assetFamilyAttribute);
+      // logger.info({ moduleName, methodName, results });
+    }
+  }
+  return OK;
+}
+
+export async function importAssetFamilyAttributeOptions(): Promise<any> {
+  const methodName: string = 'importAssetFamilyAttributeOptions';
+  logger.info({ moduleName, methodName }, 'Starting...');
+
+  const fileName: string = path.join(exportPath, filenameAssetFamilyAttributeOptions);
+  const fileDesc: number = await open(fileName, 'r');
+  const buffer: string = (await read(fileDesc)).toString().replace(/\n/gi, ', ').slice(0, -2);
+  await close(fileDesc);
+  if (buffer.length > 0) {
+    const assetFamilyAttributeOptions: AssetFamilyAttributeOption[] = JSON.parse(`[ ${buffer} ]`);
+    for (const assetFamilyAttributeOption of assetFamilyAttributeOptions) {
+      const assetFamilyCode: string = assetFamilyAttributeOption.delete_asset_family_code || '';
+      const attributeCode: string = assetFamilyAttributeOption.delete_attribute_code || '';
+      delete assetFamilyAttributeOption.delete_asset_family_code;
+      delete assetFamilyAttributeOption.delete_attribute_code;
+      const results = await patch(
+        `${apiUrlAssetFamilyAttributeOptions(assetFamilyCode, attributeCode)}` +
+        `/${assetFamilyAttributeOption.code}`,
+        assetFamilyAttributeOption);
+      // logger.info({ moduleName, methodName, results });
+    }
+  }
+  return OK;
+}
+
+export async function importAssetFamilyAssets(): Promise<any> {
+  const methodName: string = 'importAssetFamilyAssets';
+  logger.info({ moduleName, methodName }, 'Starting...');
+
+  const fileName: string = path.join(exportPath, filenameAssetFamilyAssets);
+  const fileDesc: number = await open(fileName, 'r');
+  const buffer: string = (await read(fileDesc)).toString().replace(/\n/gi, ', ').slice(0, -2);
+  await close(fileDesc);
+  if (buffer.length > 0) {
+    const assetFamilyAssets: AssetFamilyAsset[] = JSON.parse(`[ ${buffer} ]`);
+    if (assetFamilyAssets.length > 0) {
+      let assetFamilyData: AssetFamilyAsset[] = [];
+      let assetFamilyCode: string = assetFamilyAssets[0].delete_asset_family_code || '';
+      let count: number = 0;
+      for (let i = 0; i < assetFamilyAssets.length; i++) {
+        if (assetFamilyCode !== assetFamilyAssets[i].delete_asset_family_code ||
+            (count > 0 && count % patchLimit === 0) ||
+            (i + 1) === assetFamilyAssets.length) {
+          const results = await patch(`${apiUrlAssetFamilyAssets(assetFamilyCode)}`,
+                                      assetFamilyData);
+          // logger.info({ moduleName, methodName, results });
+          assetFamilyCode = assetFamilyAssets[i].delete_asset_family_code || '';
+          assetFamilyData = [];
+          count = 0;
+        }
+        delete assetFamilyAssets[i].delete_asset_family_code;
+        assetFamilyData.push(assetFamilyAssets[i]);
+        count++;
+      }
+    }
+  }
+  return OK;
+}
+
+export async function importAssetFamilyMediaFiles(assetFamilyCode: string, data: any[]): Promise<any[]> {
+  const methodName: string = 'importAssetFamilyMediaFiles';
+  logger.info({ moduleName, methodName }, `Starting...`);
+
+  const dirs: any[] = exportPath.split(path.sep);
+  dirs.push(assetFamilyCode);
+  let dirPath: string = '';
+  for (const dir of dirs) {
+    if (dir !== '.') {
+      dirPath += path.sep;
+      dirPath += dir;
+      try {
+        fs.mkdirSync(dirPath);
+      } catch (err) {
+        if (err.code !== 'EEXIST') {
+          throw err;
+        }
+      }
+    } else {
+      dirPath += dir;    
+    }
+    // console.log(dirPath);
+  }
+  
+  const results: any = {};
+  let assetFamiliesMediaFileCode: string = '';
+  for (const datum of data) {
+    const code: string = datum.code;
+    try {
+      const stream: any = fs.createReadStream(`${dirPath}${path.sep}${code}.png`);
+      assetFamiliesMediaFileCode = await postMultipartFormData(
+        apiUrlReferenceEntityMediaFiles(),
+        stream);
+        
+      const result: any = {
+        assetFamilyCode,
+        assetFamiliesMediaFileCode
+      };
+      
+      results[code] = result;
+    } catch (err) {
+      logger.error({ moduleName, methodName, err }, `loading ${code}.png`);
+      process.exit(99);
+    }
+  }
+  const handle: any = await open(`${dirPath}${path.sep}assetFamilyMediaFilesMap.txt`, 'a');
+  for (const result of results) {
+    await write(handle, `${JSON.stringify(result).toString()}\n`);
+  }
+  await close(handle);
+  
+  return results;
+} 
+
 // TODO: PAM imports
 // export async function importAssets(): Promise<any> {
 // export async function importAssetCategories(): Promise<any> {
@@ -1123,20 +1619,22 @@ async function main(): Promise<any> {
   await exportAssociationTypes();
 
   await exportCategories();
-*/
+
   await exportFamilies();
-/*
+
   await exportProducts();
 
   await exportProductModels();
 
   await exportReferenceEntities();
+*/  
+  await exportAssetFamilies();
+/*
+  // await exportAssets();
 
-  await exportAssets();
+  // await exportAssetCategories();
 
-  await exportAssetCategories();
-
-  await exportAssetTags();
+  // await exportAssetTags();
 
   await importAssociationTypes();
 

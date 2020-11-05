@@ -12,6 +12,7 @@ const possibleTasks: string[] = [
   'exportAssetCategories',
   'exportAssetTags',
   'exportAssets',
+  'exportAssetFamilies',
   'exportAssociationTypes',
   'exportAttributeGroups',
   'exportAttributes',
@@ -163,6 +164,7 @@ export default async function main(...args: any[]): Promise<any> {
   // TODO: results = (tasks.exportAssetReferenceFiles) ? await akeneo.exportAssetReferenceFiles() : [];
   results = (tasks.exportAssetTags) ? await akeneo.exportAssetTags() : [];
   // TODO: results = (tasks.exportAssetVariationFiles) ? await akeneo.exportAssetVariationFiles() : [];
+  results = (tasks.exportAssetFamilies) ? await akeneo.exportAssetFamilies() : [];
 }
 
 // Start the program
