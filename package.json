@@ -15,7 +15,7 @@
     "@types/node": "^10.14.17",
     "@types/nodemailer": "^4.6.6",
     "@types/qs": "^6.5.3",
-    "axios": "^0.18.1",
+    "axios": "^0.21.1",
     "bunyan": "^1.8.12",
     "form-data": "^3.0.0",
     "minimist": "^1.2.5",
