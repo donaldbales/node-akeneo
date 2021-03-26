@@ -2,6 +2,8 @@
 *.txt
 code_writer.xlsx
 data
+data-v4
+examinations-v4
 runlocal
 setenv
 

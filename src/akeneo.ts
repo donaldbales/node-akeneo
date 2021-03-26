@@ -1,5 +1,7 @@
 // src/akeneo.ts
 
+import Logger from 'bunyan';
+import * as change from 'change-case';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as util from 'util';
@@ -96,6 +98,15 @@ export const REFERENCE_ENTITY_TEXT: string = 'text';
 // Yes, I know, there isn't a textarea type, it's text + textarea boolean, but I need to differentiate
 export const REFERENCE_ENTITY_TEXTAREA: string = 'textarea';
 
+export const ASSET_FAMILY_MEDIA_FILE: string = 'media_file';
+export const ASSET_FAMILY_MEDIA_LINK: string = 'media_link';
+export const ASSET_FAMILY_MULTIPLE_OPTIONS: string = 'multiple_options';
+export const ASSET_FAMILY_NUMBER: string = 'number';
+export const ASSET_FAMILY_SINGLE_OPTION: string = 'single_option';
+export const ASSET_FAMILY_TEXT: string = 'text';
+// Yes, I know, there isn't a textarea type, it's text + textarea boolean, but I need to differentiate
+export const ASSET_FAMILY_TEXTAREA: string = 'textarea'
+
 const filenameAssociationTypes: string = 'associationTypes.json';
 const filenameAttributes: string = 'attributes.json';
 const filenameAttributeGroups: string = 'attributeGroups.json';
@@ -128,11 +139,194 @@ const filenameAssetTags: string = 'assetTags.json';
 const filenameAssetVariationFiles: string = 'assetVariationFiles.json';
 // end of v3
 
-const close: any = util.promisify(fs.close);
-const open: any = util.promisify(fs.open);
-const read: any = util.promisify(fs.readFile);
-const unlink: any = util.promisify(fs.unlink);
-const write: any = util.promisify(fs.write);
+export const close: any = util.promisify(fs.close);
+export const open: any = util.promisify(fs.open);
+export const read: any = util.promisify(fs.readFile);
+export const unlink: any = util.promisify(fs.unlink);
+export const write: any = util.promisify(fs.write);
+
+// Helper functions
+
+export function assetCode(name: string) {
+  const tokens: any[] = name.split('-');
+  let code: string = '';
+  if (name &&
+      name.length === 36 &&
+      tokens.length === 5 &&
+      tokens[0].length === 8 &&
+      tokens[1].length === 4 &&
+      tokens[2].length === 4 &&
+      tokens[3].length === 4 &&
+      tokens[4].length === 12) {
+    code = name.replace(/-/g, "_");
+  } else {
+    code = `${change.snakeCase(name.replace(/[^0-9a-zA-Z]+/g, '_'))}`;
+  }
+  if (code.length > 255) {
+    code = code.replace(/_/g, '');
+  }
+  if (code.length > 255) {
+    console.error(`WARNING: asset code truncated to 255 characters: ${code.toString()}.`);
+    code = code.slice(0, 255);
+  }
+  
+  return code;
+}
+
+export function attributeCode(name: string) {
+  const tokens: any[] = name.split('-');
+  let code: string = '';
+  if (name &&
+      name.length === 36 &&
+      tokens.length === 5 &&
+      tokens[0].length === 8 &&
+      tokens[1].length === 4 &&
+      tokens[2].length === 4 &&
+      tokens[3].length === 4 &&
+      tokens[4].length === 12) {
+    code = name.replace(/-/g, "_");
+  } else {
+    code = `${change.snakeCase(name.replace(/[^0-9a-zA-Z]+/g, '_'))}`;
+  }
+  if (code.length > 100) {
+    code = code.replace(/_/g, '');
+  }
+  if (code.length > 100) {
+    console.error(`WARNING: attribute code truncated to 100 characters: ${code.toString()}.`);
+    code = code.slice(0, 100);
+  }
+  
+  return code;
+}
+
+export function attributeLabel(property: string): string {
+  let label: string = (property[0] === '"' &&
+    property[property.length - 1] === '"') ?
+    property.slice(1, property.length - 1) :
+    change.capitalCase(property);
+  if (label.length > 255) {
+    console.error(`WARNING: label truncated to 255 characters: ${label}.`);
+    label = label.slice(0, 255);
+  }
+  
+  return label;
+}
+
+export function fileCode(name: string) {
+  const tokens: any[] = name.split('-');
+  let code: string = '';
+  if (name &&
+      name.length === 36 &&
+      tokens.length === 5 &&
+      tokens[0].length === 8 &&
+      tokens[1].length === 4 &&
+      tokens[2].length === 4 &&
+      tokens[3].length === 4 &&
+      tokens[4].length === 12) {
+    code = name.replace(/-/g, "_");
+  } else {
+    code = `${change.snakeCase(name.replace(/[^0-9a-zA-Z]+/g, '_'))}`;
+  }
+  if (code.length > 255) {
+    code = code.replace(/_/g, '');
+  }
+  if (code.length > 255) {
+    console.error(`WARNING: file code truncated to 250 characters: ${code.toString()}.`);
+    code = code.slice(0, 255);
+  }
+  
+  return code;
+}
+
+export function referenceEntityCode(name: string) {
+  const tokens: any[] = name.split('-');
+  let code: string = '';
+  if (name &&
+      name.length === 36 &&
+      tokens.length === 5 &&
+      tokens[0].length === 8 &&
+      tokens[1].length === 4 &&
+      tokens[2].length === 4 &&
+      tokens[3].length === 4 &&
+      tokens[4].length === 12) {
+    code = name.replace(/-/g, "_");
+  } else {
+    code = `${change.snakeCase(name.replace(/[^0-9a-zA-Z]+/g, '_'))}`;
+  }
+  if (code.length > 255) {
+    code = code.replace(/_/g, '');
+  }
+  if (code.length > 255) {
+    console.error(`WARNING: reference entity code truncated to 255 characters: ${code.toString()}.`);
+    code = code.slice(0, 255);
+  }
+  
+  return code;
+}
+
+export function urlCode(name: string) {
+  const tokens: any[] = name.split('-');
+  let code: string = '';
+  if (name &&
+      name.length === 36 &&
+      tokens.length === 5 &&
+      tokens[0].length === 8 &&
+      tokens[1].length === 4 &&
+      tokens[2].length === 4 &&
+      tokens[3].length === 4 &&
+      tokens[4].length === 12) {
+    code = name.replace(/-/g, "_");
+  } else {
+    code = `${encodeURIComponent(name).replace(/[^0-9a-zA-Z]/g, '_')}`;
+  }
+  if (code.length > 255) {
+    code = code.replace(/_/g, '');
+  }
+  if (code.length > 255) {
+    console.error(`WARNING: url code truncated to 255 characters: ${code.toString()}.`);
+    code = code.slice(0, 255);
+  }
+  
+  return code;
+}
+
+export function deQuote(property: string): string {
+  let localProperty: string = property;
+  if (localProperty &&
+      localProperty[0] === '"' &&
+      localProperty[localProperty.length - 1] === '"') {
+    localProperty = localProperty.slice(1, localProperty.length - 1);    
+  }
+  
+  return localProperty;
+}
+
+export function mkdirs(logger: Logger, dirParts: string[]) {
+  const methodName: string = 'mkdirs';
+  logger.debug({ moduleName, methodName }, `Starting...`);
+  
+  const dirs: any[] = exportPath.split(path.sep);
+  for (const dirPart of dirParts) {
+    dirs.push(dirPart);
+  }
+  let dirPath: string = '';
+  for (const dir of dirs) {
+    if (dir !== '.') {
+      dirPath += path.sep;
+      dirPath += dir;
+      try  {
+        fs.mkdirSync(dirPath);
+      } catch (err) {
+        if (err.code !== 'EEXIST') {
+          throw err;
+        }
+      }
+    } else {
+      dirPath += dir;    
+    }
+  }
+  return dirPath;
+}
 
 // Catalog APIs
 
@@ -244,8 +438,12 @@ export function apiUrlReferenceEntityMediaFiles(): string {
 
 /******************** A S S E T   F A M I L I E S ********************/
 
-export function apiUrlAssetFamilies(): string {
-  return '/api/rest/v1/asset-families';
+export function apiUrlAssetFamilies(assetFamilyCode: string = ''): string {
+  if (assetFamilyCode) {
+    return `/api/rest/v1/asset-families/${assetFamilyCode}`;
+  } else {
+    return '/api/rest/v1/asset-families';
+  }
 }
 
 export function apiUrlAssetFamilyAttributes(
@@ -273,7 +471,7 @@ export function apiUrlAssetFamilyAttributeOptions(
   }
 }
 
-export function apiUrlAssetMediaFiles(assetFamilyAssetCode: string = ''): string {
+export function apiUrlAssetFamilyMediaFiles(assetFamilyAssetCode: string = ''): string {
   if (assetFamilyAssetCode) {
     return `/api/rest/v1/asset-media-files/${assetFamilyAssetCode}`;
   } else {

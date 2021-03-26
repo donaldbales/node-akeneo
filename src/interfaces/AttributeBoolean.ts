@@ -13,4 +13,5 @@ export interface AttributeBoolean {
   available_locales?: string[];
   unique: boolean;
   useable_as_grid_filter: boolean;
+  default_value?: boolean;
 }

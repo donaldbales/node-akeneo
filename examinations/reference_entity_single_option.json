@@ -1,7 +1,0 @@
-{"code":"referenceentitysingleoption",
- "labels":{"en_US":"Reference Entity Single Option"},
- "type":"single_option",
- "value_per_locale":false,
- "value_per_channel":false,
- "is_required_for_completeness":false,
- "delete_reference_entity_code":"referenceentitycode"}
