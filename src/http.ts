@@ -1,3 +1,4 @@
+import Logger from 'bunyan';
 import axios, { AxiosPromise, AxiosRequestConfig, AxiosResponse } from 'axios';
 import * as FormData from 'form-data';
 import * as qs from 'qs';
@@ -7,7 +8,7 @@ import * as util from 'util';
 import { inspect } from './inspect';
 import { getLogger } from './logger';
 
-const logger: any = getLogger('nodeakeneo');
+const logger: Logger = getLogger('node-akeneo');
 const moduleName: string = 'http';
 
 const clientId: string = (process.env.AKENEO_CLIENT_ID as string) || '';

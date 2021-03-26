@@ -7,27 +7,22 @@
 
 /* tslint:disable:no-console */
 
+import Logger from 'bunyan';
 import { Connection, ConnectionConfig, ConnectionError } from 'tedious';
-
 import * as fs from 'fs';
 import * as tds from 'tedious';
 import * as util from 'util';
 
-const localLogger: any = {
-  debug: console.log,
-  error: console.error,
-  info: console.log,
-  trace: console.log
-};
+import { getLogger } from './logger';
 
-const moduleName: string = 'sql';
+const moduleName: string = 'sqlms';
 
 // I create this function to make it easy to develop and debug
 function inspect(obj: any, depth: number = 5) {
   return util.inspect(obj, true, depth, false);
 }
 
-export function connect(logger: any): Promise<any> {
+export function connect(logger: Logger): Promise<any> {
   const methodName: string = 'connect';
 
   return new Promise((resolve, reject) => {
@@ -93,7 +88,7 @@ export function connect(logger: any): Promise<any> {
   });
 }
 
-export function executeDDL(logger: any, conn: any, sql: string): Promise<any> {
+export function executeDDL(logger: Logger, conn: any, sql: string): Promise<any> {
   const methodName: string = 'executeDDL';
 
   return new Promise((resolve, reject) => {
@@ -132,7 +127,7 @@ export function executeDDL(logger: any, conn: any, sql: string): Promise<any> {
   });
 }
 
-export function executeDML(logger: any, conn: any, sql: string, params: any[] = []): Promise<any> {
+export function executeDML(logger: Logger, conn: any, sql: string, params: any[] = []): Promise<any> {
   const methodName: string = 'executeDML';
   logger.info(`${moduleName}, ${methodName}: start`);
 
@@ -263,18 +258,18 @@ export function executeDML(logger: any, conn: any, sql: string, params: any[] = 
 }
 
 // A main method with no command line parameter management
-async function main(...args: any[]): Promise<any> {
+async function main(loggerIn: any = null): Promise<any> {
   const methodName: string = 'main';
-  
-  localLogger.info(`${moduleName}, ${methodName}, Starting...`);
+  let logger = (loggerIn) ? loggerIn : getLogger(moduleName);
+  logger.info(`${moduleName}, ${methodName}, Starting...`);
 
-  const conn: any = await connect(localLogger);
+  const conn: any = await connect(logger);
 
   if (require.main === module) {
-    setTimeout(() => { process.exit(0); }, 10000);
+    setTimeout(() => { process.exit(0); }, 3000);
   }
 
-  localLogger.info(`${moduleName}, ${methodName}, Ending.`);
+  logger.info(`${moduleName}, ${methodName}, Ending.`);
   
   conn.end();
 }

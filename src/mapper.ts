@@ -1,5 +1,6 @@
 // src/mapper.ts
 
+import Logger from 'bunyan';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -8,7 +9,7 @@ import { getLogger } from './logger';
 const moduleName: string = 'mapper';
 const exportPath: string = (process.env.AKENEO_EXPORT_PATH as string) || '.';
 
-export function load(logger: any, filename: string, map: Map<string, any>, key: string): Promise<any> {
+export function load(logger: Logger, filename: string, map: Map<string, any>, key: string): Promise<any> {
   const methodName: string = 'load';
   logger.info({ moduleName, methodName, filename, map, key }, `Starting`);
   

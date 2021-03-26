@@ -1,52 +1,25 @@
-import * as change from 'change-case';
+import Logger from 'bunyan';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import * as akeneo from './akeneo';
-import { inspect } from './inspect';
-import { Attribute } from './interfaces/Attribute';
-import { AttributeBoolean } from './interfaces/AttributeBoolean';
-import { AttributeDate } from './interfaces/AttributeDate';
-import { AttributeGroup } from './interfaces/AttributeGroup';
-import { AttributeNumber } from './interfaces/AttributeNumber';
-import { AttributeOption } from './interfaces/AttributeOption';
-import { AttributePriceCollection } from './interfaces/AttributePriceCollection';
-import { AttributeSimpleselect } from './interfaces/AttributeSimpleselect';
-import { AttributeText } from './interfaces/AttributeText';
-import { AttributeTextarea } from './interfaces/AttributeTextarea';
-import { Category } from './interfaces/Category';
-import { Family } from './interfaces/Family';
-import { FamilyVariant } from './interfaces/FamilyVariant';
-import { Product } from './interfaces/Product';
-import { ProductAssociation } from './interfaces/ProductAssociation';
-import { ProductModel } from './interfaces/ProductModel';
-import { ProductValue } from './interfaces/ProductValue';
+import * as akeneo from '../akeneo';
+import { inspect } from '../inspect';
+import { Attribute } from '../interfaces/Attribute';
+import { AttributeBoolean } from '../interfaces/AttributeBoolean';
+import { AttributeDate } from '../interfaces/AttributeDate';
+import { AttributeNumber } from '../interfaces/AttributeNumber';
+import { AttributeOption } from '../interfaces/AttributeOption';
+import { AttributePriceCollection } from '../interfaces/AttributePriceCollection';
+import { AttributeSimpleselect } from '../interfaces/AttributeSimpleselect';
+import { AttributeText } from '../interfaces/AttributeText';
+import { AttributeTextarea } from '../interfaces/AttributeTextarea';
 
-export let defaultGroup: string = 'universal';
+export let defaultGroup: string = 'other';
+
 const exportPath: string = (process.env.AKENEO_EXPORT_PATH as string) || '.';
-const moduleName: string = 'helper-products';
+const moduleName: string = 'attributes/transform';
 
-/*
-Asset Collection
-Date
-File
-Identifier
-Image
-Measurement
-Multi Select
-Number
-Price
-Reference Data Multi Select
-Reference Data Simple Select
-Reference Entity Multiple Links
-Reference Entity Single Link
-Simple Select
-Text
-Text Area
-Yes/No
-*/
-
-export function createAssetCollection(logger: any, attributeMap: any, property: string) {
+export function createAssetCollection(logger: Logger, attributeMap: any, property: string) {
   const methodName: string = 'createAssetCollection';
   logger.debug({ moduleName, methodName }, `Starting...`);
 
@@ -87,14 +60,14 @@ export function createAssetCollection(logger: any, attributeMap: any, property: 
 }
 
 // A.K.A. Yes/No
-export function createBoolean(logger: any, attributeMap: any, property: string) {
+export function createBoolean(logger: Logger, attributeMap: any, property: string) {
   const methodName: string = 'createBoolean';
   logger.debug({ moduleName, methodName }, `Starting...`);
 
   return createYesNo(logger, attributeMap, property);
 }
 
-export function createDate(logger: any, attributeMap: any, property: string) {
+export function createDate(logger: Logger, attributeMap: any, property: string) {
   const methodName: string = 'createDate';
   logger.debug({ moduleName, methodName }, `Starting...`);
 
@@ -192,7 +165,7 @@ export function createDate(logger: any, attributeMap: any, property: string) {
 }
 */
 
-export function createMultiselect(logger: any, attributeMap: any, property: string) {
+export function createMultiselect(logger: Logger, attributeMap: any, property: string) {
   const methodName: string = 'createMultiselect';
   logger.debug({ moduleName, methodName }, `Starting...`);
 
@@ -238,7 +211,7 @@ export function createMultiselect(logger: any, attributeMap: any, property: stri
   return results;
 }
 
-export function createNumberDecimal(logger: any, attributeMap: any, property: string) {
+export function createNumberDecimal(logger: Logger, attributeMap: any, property: string) {
   const methodName: string = 'createNumberDecimal';
   logger.debug({ moduleName, methodName }, `Starting...`);
 
@@ -280,7 +253,7 @@ export function createNumberDecimal(logger: any, attributeMap: any, property: st
   return results;
 }
 
-export function createNumberInt(logger: any, attributeMap: any, property: string) {
+export function createNumberInt(logger: Logger, attributeMap: any, property: string) {
   const methodName: string = 'createNumberInt';
   logger.debug({ moduleName, methodName }, `Starting...`);
 
@@ -322,7 +295,7 @@ export function createNumberInt(logger: any, attributeMap: any, property: string
   return results;
 }
 
-export function createPriceCollection(logger: any, attributeMap: any, property: string) {
+export function createPriceCollection(logger: Logger, attributeMap: any, property: string) {
   const methodName: string = 'createPriceCollection';
   logger.debug({ moduleName, methodName }, `Starting...`);
 
@@ -363,7 +336,7 @@ export function createPriceCollection(logger: any, attributeMap: any, property: 
   return results;
 }
 
-export function createReferenceEntity(logger: any, attributeMap: any, property: string) {
+export function createReferenceEntity(logger: Logger, attributeMap: any, property: string) {
   const methodName: string = 'createReferenceEntity';
   logger.debug({ moduleName, methodName }, `Starting...`);
 
@@ -403,7 +376,7 @@ export function createReferenceEntity(logger: any, attributeMap: any, property: 
   return results;
 }
 
-export function createReferenceEntityCollection(logger: any, attributeMap: any, property: string) {
+export function createReferenceEntityCollection(logger: Logger, attributeMap: any, property: string) {
   const methodName: string = 'createReferenceEntityCollection';
   logger.debug({ moduleName, methodName }, `Starting...`);
 
@@ -443,7 +416,7 @@ export function createReferenceEntityCollection(logger: any, attributeMap: any, 
   return results;
 }
 
-export function createSimpleselect(logger: any, attributeMap: any, property: string) {
+export function createSimpleselect(logger: Logger, attributeMap: any, property: string) {
   const methodName: string = 'createSimpleSelect';
   logger.debug({ moduleName, methodName }, `Starting...`);
 
@@ -491,7 +464,7 @@ export function createSimpleselect(logger: any, attributeMap: any, property: str
   return results;
 }
 
-export function createText(logger: any, attributeMap: any, property: string) {
+export function createText(logger: Logger, attributeMap: any, property: string) {
   const methodName: string = 'createText';
   logger.debug({ moduleName, methodName }, `Starting...`);
 
@@ -532,7 +505,7 @@ export function createText(logger: any, attributeMap: any, property: string) {
   return results;
 }
 
-export function createTextarea(logger: any, attributeMap: any, property: string) {
+export function createTextarea(logger: Logger, attributeMap: any, property: string) {
   const methodName: string = 'createTextArea';
   logger.debug({ moduleName, methodName }, `Starting...`);
 
@@ -568,7 +541,7 @@ export function createTextarea(logger: any, attributeMap: any, property: string)
   return results;
 }
 
-export function createYesNo(logger: any, attributeMap: any, property: string) {
+export function createYesNo(logger: Logger, attributeMap: any, property: string) {
   const methodName: string = 'createYesNo';
   logger.debug({ moduleName, methodName }, `Starting...`);
 
@@ -601,6 +574,94 @@ export function createYesNo(logger: any, attributeMap: any, property: string) {
     attribute.default_value = attributeMap[property]['default_value'];
   }
   results.attribute = attribute;
+
+  return results;
+}
+
+export function attributes(logger: Logger, attributeMap: any) {
+  const methodName: string = 'attributes';
+  logger.info({ moduleName, methodName }, `Starting...`);
+
+  const results: any = {
+    attributes: [],
+    attributeOptions: []
+  };
+
+  for (const property in attributeMap) {
+    let sqlDataType: string = 'varchar';
+    if (attributeMap[property].sql_data_type  &&
+        attributeMap[property].sql_data_type.toLowerCase) {
+      sqlDataType = attributeMap[property].sql_data_type.toLowerCase();
+    }
+    if (attributeMap.hasOwnProperty(property)) {
+      if (attributeMap[property].akeneo_type === akeneo.PIM_CATALOG_ASSET_COLLECTION) {
+        const result: any = createAssetCollection(logger, attributeMap, property);
+        results.attributes.push(result.attribute);
+      } else
+      if (attributeMap[property].akeneo_type === akeneo.PIM_CATALOG_BOOLEAN) {
+        const result: any = createBoolean(logger, attributeMap, property);
+        results.attributes.push(result.attribute);
+      } else
+      if (attributeMap[property].akeneo_type === akeneo.PIM_CATALOG_DATE) {
+        const result: any = createDate(logger, attributeMap, property);
+        results.attributes.push(result.attribute);
+      } else
+      if (attributeMap[property].akeneo_type === akeneo.PIM_CATALOG_MULTISELECT) {
+        const result: any = createMultiselect(logger, attributeMap, property);
+        results.attributes.push(result.attribute);
+        for (const attributeOption of result.attributeOptions) {
+          results.attributeOptions.push(attributeOption);
+        }
+      } else
+      if (attributeMap[property].akeneo_type === akeneo.PIM_CATALOG_NUMBER &&
+          sqlDataType === 'decimal') {
+        const result: any = createNumberDecimal(logger, attributeMap, property);
+        results.attributes.push(result.attribute);
+      } else
+      if (attributeMap[property].akeneo_type === akeneo.PIM_CATALOG_NUMBER &&
+         (sqlDataType === 'int' ||
+          sqlDataType === 'smallint' ||
+          sqlDataType === 'bigint')) {
+        const result: any = createNumberInt(logger, attributeMap, property);
+        results.attributes.push(result.attribute);
+      } else
+      if (attributeMap[property].akeneo_type === akeneo.PIM_CATALOG_PRICE_COLLECTION) {
+        const result: any = createPriceCollection(logger, attributeMap, property);
+        results.attributes.push(result.attribute);
+      } else
+      if (attributeMap[property].akeneo_type === akeneo.AKENEO_REFERENCE_ENTITY) {
+        const result: any = createReferenceEntity(logger, attributeMap, property);
+        results.attributes.push(result.attribute);
+      } else
+      if (attributeMap[property].akeneo_type === akeneo.AKENEO_REFERENCE_ENTITY_COLLECTION) {
+        const result: any = createReferenceEntityCollection(logger, attributeMap, property);
+        results.attributes.push(result.attribute);
+      } else
+      if (attributeMap[property].akeneo_type === akeneo.PIM_CATALOG_SIMPLESELECT) {
+        const result: any = createSimpleselect(logger, attributeMap, property);
+        results.attributes.push(result.attribute);
+        for (const attributeOption of result.attributeOptions) {
+          results.attributeOptions.push(attributeOption);
+        }
+      } else
+      if (attributeMap[property].akeneo_type === akeneo.PIM_CATALOG_TEXT) {
+        const result: any = createText(logger, attributeMap, property);
+        results.attributes.push(result.attribute);
+      } else
+      if (attributeMap[property].akeneo_type === akeneo.PIM_CATALOG_TEXTAREA) {
+        const result: any = createTextarea(logger, attributeMap, property);
+        results.attributes.push(result.attribute);
+      } else {
+        console.error(`Add a akeneo mapping for ${attributeMap[property].akeneo_type}` + ` for ${property}`);
+        logger.error({ moduleName, methodName },
+          `Add a akeneo mapping for ${attributeMap[property].akeneo_type}` + ` for ${property}`);
+        process.exit(99);
+      }
+    }
+  }
+
+  // Save the map so it can be used later from products/transform.ts
+  fs.writeFileSync(`${exportPath}${path.sep}transformedAttributes.json`, JSON.stringify(results, null, '  '));
 
   return results;
 }

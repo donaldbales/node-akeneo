@@ -1,5 +1,7 @@
 // referenceEntityExample.ts
 
+import Logger from 'bunyan';
+
 import * as akeneo from './akeneo';
 import * as http from './http';
 import { getLogger } from './logger';
@@ -14,7 +16,7 @@ const EXAMPLE_CODE: string = 'example';
 //
 // STEP 1: Load the reference entity
 //
-async function loadReferenceEntity(logger: any): Promise<any[]> {
+async function loadReferenceEntity(logger: Logger): Promise<any[]> {
   const methodName: string = 'loadExample';
   logger.info({ moduleName, methodName }, `Starting...`);
 
@@ -33,7 +35,7 @@ async function loadReferenceEntity(logger: any): Promise<any[]> {
 //
 // STEP 2: Extract, Transform, and Load (ETL) the attributes and their options
 //
-function extractReferenceEntityAttributes(logger: any, referenceEntityCode: string = EXAMPLE_CODE): any {
+function extractReferenceEntityAttributes(logger: Logger, referenceEntityCode: string = EXAMPLE_CODE): any {
   const methodName: string = 'extractReferenceEntityAttributes';
   logger.info({ moduleName, methodName }, `Starting...`);
 
@@ -70,7 +72,7 @@ function extractReferenceEntityAttributes(logger: any, referenceEntityCode: stri
   return resultMap;
 }
 
-function transformReferenceEntityAttributes(logger: any, extracted: any): any {
+function transformReferenceEntityAttributes(logger: Logger, extracted: any): any {
   const methodName: string = 'transformReferenceEntityAttributes';
   logger.info({ moduleName, methodName }, `Starting...`);
 
@@ -117,7 +119,7 @@ function transformReferenceEntityAttributes(logger: any, extracted: any): any {
   return resultMap;
 }
 
-async function loadReferenceEntityAttributes(logger: any, transformed: any): Promise<any[]> {
+async function loadReferenceEntityAttributes(logger: Logger, transformed: any): Promise<any[]> {
   const methodName: string = 'loadReferenceEntityAttributes';
   logger.info({ moduleName, methodName }, `Starting...`);
 
@@ -156,7 +158,7 @@ async function loadReferenceEntityAttributes(logger: any, transformed: any): Pro
 //
 // STEP 3: Extract, Transform, and Load (ETL) Records
 //
-function extractReferenceEntityRecords(logger: any, referenceEntityCode: string = EXAMPLE_CODE): any {
+function extractReferenceEntityRecords(logger: Logger, referenceEntityCode: string = EXAMPLE_CODE): any {
   const methodName: string = 'extractReferenceEntityRecords';
   logger.info({ moduleName, methodName }, `Starting...`);
 
@@ -189,7 +191,7 @@ function extractReferenceEntityRecords(logger: any, referenceEntityCode: string 
   return results;
 }
 
-function transformReferenceEntityRecords(logger: any, extractedRecords: any[]): any[] {
+function transformReferenceEntityRecords(logger: Logger, extractedRecords: any[]): any[] {
   const methodName: string = 'transformReferenceEntityRecords';
   logger.info({ moduleName, methodName }, `Starting...`);
 
@@ -228,7 +230,7 @@ function transformReferenceEntityRecords(logger: any, extractedRecords: any[]): 
   return results;
 }
 
-async function loadReferenceEntityRecords(logger: any, transformedRecords: any[]): Promise<any> {
+async function loadReferenceEntityRecords(logger: Logger, transformedRecords: any[]): Promise<any> {
   const referenceEntityRecords: any[] = transformedRecords;
   console.log(transformedRecords.length);
   if (referenceEntityRecords.length > 0) {

@@ -1,10 +1,10 @@
 // executor.ts
-
+import Logger from 'bunyan';
 import * as childProcess from 'child_process';
 
 const moduleName: string = 'executor';
 
-export async function exec(logger: any, command: string, options: any = {}): Promise<any> {
+export async function exec(logger: Logger, command: string, options: any = {}): Promise<any> {
   const methodName: string = 'exec';
   logger.debug({ moduleName, methodName }, `Starting...`);
   
