@@ -3,18 +3,17 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { Connection } from 'tedious';
 
-import * as akeneo from '../akeneo';
+import * as akeneo from '../../akeneo';
+import { ASSET_FAMILY_CODE } from './helper';
 import * as extract from './extract';
 import * as load from './load';
 import * as transform from './transform';
-import { getLogger } from '../logger';
+import { getLogger } from '../../logger';
 
 const sql: any = require(`..${path.sep}${(process.env.AKENEO_RDBMS_DRIVER as string || 'sqlms')}`);
 
 const exportPath: string = (process.env.AKENEO_EXPORT_PATH as string) || '.';
-const moduleName: string = 'assetFamilies/index';
-
-export const ASSET_FAMILY_CODE: string = 'images';
+const moduleName: string = `assetFamilies/${ASSET_FAMILY_CODE}/index`;
 
 export async function main(loggerIn: any = null, startPKey: string = '', endPKey: string = ''): Promise<any> {
   const methodName: string = 'main';

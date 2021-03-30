@@ -3,18 +3,17 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { URL } from 'url';
 
-import * as akeneo from '../akeneo';
-import { exec } from '../executor';
-import { inspect } from '../inspect';
-import { getLogger } from '../logger';
-import * as mapper from '../mapper';
+import * as akeneo from '../../akeneo';
+import { ASSET_FAMILY_CODE } from './helper';
+import { exec } from '../../executor';
+import { inspect } from '../../inspect';
+import { getLogger } from '../../logger';
+import * as mapper from '../../mapper';
 
 const sql: any = require(`..${path.sep}${(process.env.AKENEO_RDBMS_DRIVER as string || 'sqlms')}`);
 
 const exportPath: string = (process.env.AKENEO_EXPORT_PATH as string) || '.';
-const moduleName: string = 'assetFamilies/extract';
-
-export const ASSET_FAMILY_CODE: string = 'images';
+const moduleName: string = `assetFamilies/${ASSET_FAMILY_CODE}/extract`;
 
 const imagesExtractedMap: Map<string, any> = new Map();
 const imagesLoadedMap: Map<string, any> = new Map();

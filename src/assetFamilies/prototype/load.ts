@@ -2,20 +2,19 @@ import Logger from 'bunyan';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import * as akeneo from '../akeneo';
-import { AssetFamily } from '../interfaces/AssetFamily';
-import { AssetFamilyAsset } from '../interfaces/AssetFamilyAsset';
-import * as http from '../http';
-import { inspect } from '../inspect';
-import { getLogger } from '../logger';
-import * as mapper from '../mapper';
+import * as akeneo from '../../akeneo';
+import { ASSET_FAMILY_CODE } from './helper';
+import { AssetFamily } from '../../interfaces/AssetFamily';
+import { AssetFamilyAsset } from '../../interfaces/AssetFamilyAsset';
+import * as http from '../../http';
+import { inspect } from '../../inspect';
+import { getLogger } from '../../logger';
+import * as mapper from '../../mapper';
 
 const sql: any = require(`..${path.sep}${(process.env.AKENEO_RDBMS_DRIVER as string || 'sqlms')}`);
 
 const exportPath: string = (process.env.AKENEO_EXPORT_PATH as string) || '.';
-const moduleName: string = 'assets/load';
-
-export const ASSET_FAMILY_CODE: string = 'images';
+const moduleName: string = `assetFamilies/${ASSET_FAMILY_CODE}/load`;
 
 const imagesExtractedMap: Map<string, any> = new Map();
 const imagesLoadedMap: Map<string, any> = new Map();

@@ -2,17 +2,16 @@ import Logger from 'bunyan';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import * as akeneo from '../akeneo';
-import { getLogger } from '../logger';
-import { AssetFamily } from '../interfaces/AssetFamily';
-import { AssetFamilyAttribute } from '../interfaces/AssetFamilyAttribute';
-import { AssetFamilyAttributeOption } from '../interfaces/AssetFamilyAttributeOption';
-import { AssetFamilyAsset } from '../interfaces/AssetFamilyAsset';
+import * as akeneo from '../../akeneo';
+import { ASSET_FAMILY_CODE } from './helper';
+import { getLogger } from '../../logger';
+import { AssetFamily } from '../../interfaces/AssetFamily';
+import { AssetFamilyAttribute } from '../../interfaces/AssetFamilyAttribute';
+import { AssetFamilyAttributeOption } from '../../interfaces/AssetFamilyAttributeOption';
+import { AssetFamilyAsset } from '../../interfaces/AssetFamilyAsset';
 
-const moduleName: string = 'assetFamilies/transform';
 const exportPath: string = (process.env.AKENEO_EXPORT_PATH as string) || '.';
-
-export const ASSET_FAMILY_CODE: string = 'images';
+const moduleName: string = `assetFamilies/${ASSET_FAMILY_CODE}/transform`;
 
 function createMediaFile(logger: any, attributeMap: any, property: string) {
   const results: any = {
@@ -29,7 +28,7 @@ function createMediaFile(logger: any, attributeMap: any, property: string) {
     value_per_channel: false,
     is_required_for_completeness: false,
     allowed_extensions: [],
-    media_type: "image"
+    media_type: 'image'
   };
   results.attribute = attribute;
 
@@ -72,8 +71,8 @@ function createNumber(logger: any, attributeMap: any, property: string) {
     value_per_channel: false,
     is_required_for_completeness: false,
     decimals_allowed: false,
-    min_value: "0",
-    max_value: "999999999999"
+    min_value: '0',
+    max_value: '999999999999'
   };
   results.attribute = attribute;
 
