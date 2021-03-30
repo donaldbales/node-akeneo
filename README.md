@@ -1,11 +1,11 @@
-# nodeakeneo
-Interfaces and modules to access Akeneo v3.x from its web API
+# node-akeneo
+Interfaces and modules to access Akeneo version 3.x, 4.x, and 5.x from its web API
 
 ## How to clone, install modules, and compile
 
 ```
-git clone git@github.com:donaldbales/nodeakeneo.git
-cd nodeakeneo
+git clone git@github.com:donaldbales/node-akeneo.git
+cd node-akeneo
 npm install
 ./node_modules/.bin/tsc
 ```
