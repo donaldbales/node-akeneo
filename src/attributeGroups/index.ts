@@ -12,7 +12,7 @@ const sql: any = require(`..${path.sep}${(process.env.AKENEO_RDBMS_DRIVER as str
 const exportPath: string = (process.env.AKENEO_EXPORT_PATH as string) || '.';
 const moduleName: string = 'attributeGroups/index';
 
-export async function main(loggerIn: any = null, startPkey: any = null, endPkey: any = null): Promise<any> {
+export async function main(loggerIn: any = null, startPKey: any = null, endPKey: any = null): Promise<any> {
   const methodName: string = 'main';
   let logger = (loggerIn) ? loggerIn : getLogger(moduleName);
   logger.info({ moduleName, methodName }, `Starting...`);
