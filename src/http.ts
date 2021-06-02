@@ -61,21 +61,22 @@ async function getToken(): Promise<any> {
   }
 }
 
-export async function get(apiUrl: string): Promise<any> {
+export async function get(apiUrl: string, callback: any = null): Promise<any> {
   const methodName: string = 'get';
   logger.info({ moduleName, methodName, apiUrl }, `Starting...`);
-  const accessToken: string = await getToken();
   const options: any = {
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
+      'Authorization': 'none',
       'Content-Type': `application/json`
     }
   };
   let response: any = {};
-  const results: any[] = [];
-  let url: string = `${baseUrl}${apiUrl}?limit=100`;
+  let results: any[] = [];
+  let url: string = apiUrl.indexOf('?') === -1 ? `${baseUrl}${apiUrl}?limit=100` : `${baseUrl}${apiUrl}&limit=100`;
 
   for ( ; ; ) {
+    const accessToken = await getToken();
+    options.headers.Authorization = `Bearer ${accessToken}`;
     try {
       response = await axios.get(url, options);
       logger.trace({ moduleName, methodName }, `response=\n${inspect(response)}`);
@@ -93,6 +94,10 @@ export async function get(apiUrl: string): Promise<any> {
           }
           results.push(item);
         }
+        if (callback) {
+          callback(results);
+          results = [];
+        }
       } else
       if (pageResponse instanceof Array) {
         for (const item of pageResponse) {
@@ -100,6 +105,10 @@ export async function get(apiUrl: string): Promise<any> {
             delete item._links;
           }
           results.push(item);
+        }
+        if (callback) {
+          callback(results);
+          results [];
         }
       }
 

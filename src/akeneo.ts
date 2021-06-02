@@ -814,22 +814,30 @@ export async function exportProducts(): Promise<any> {
   logger.info({ moduleName, methodName }, 'Starting...');
 
   let products: Product[];
+  const fileName: string = path.join(exportPath, filenameProducts);
+  const fileDesc: number = await open(fileName, 'w');
+  let count: number = 0;
   try {
-    products = await get(apiUrlProducts());
-    logger.debug({ moduleName, methodName, products });
+    products = await get(`${apiUrlProducts()}?pagination_type=search_after`, async (results: any[]) => {
+      console.log(results.length);
+      console.log(json.length);
+      const json = JSON.stringify(results);
+      console.log(inspect(json, 4));
+      process.exit(99);
+      const buffer: Buffer = Buffer().alloc(.length);
+      for (const result of results) {
+        buffer.concat(JSON.stringify(buffer) + '\n');      
+      } 
+      await write(fileDesc, buffer);
+      ++count;
+    });
   } catch (err) {
     logger.info({ moduleName, methodName, err });
     return err;
   }
-  if (products !== null &&
-      typeof products[Symbol.iterator] === 'function') {
-    const fileName: string = path.join(exportPath, filenameProducts);
-    const fileDesc: number = await open(fileName, 'w');
-    for (const product of products) {
-      await write(fileDesc, Buffer.from(JSON.stringify(product) + '\n'));
-    }
-    await close(fileDesc);
-  }
+  logger.info({ moduleName, methodName, products: count });
+  await close(fileDesc);
+
   return OK;
 }
 
