@@ -20,7 +20,7 @@
     "axios": "^0.21.1",
     "bunyan": "^1.8.12",
     "change-case": "^4.1.1",
-    "minimist": "^1.2.5",
+    "minimist": "^1.2.6",
     "mysql": "^2.17.1",
     "nodemailer": "^6.4.16",
     "qs": "^6.9.0",
