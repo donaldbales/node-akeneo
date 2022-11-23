@@ -1,9 +1,9 @@
 /* tslint:disable:no-console */
 
+import * as akeneo from 'node-akeneo-api';
 import * as fs from 'fs';
 import * as minimist from 'minimist';
 
-import * as akeneo from './akeneo';
 import { getLogger } from './logger';
 
 const moduleName: string = 'index';

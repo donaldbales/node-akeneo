@@ -1,10 +1,9 @@
-import Logger from 'bunyan';
+import * as akeneo from 'node-akeneo-api';
 import * as fs from 'fs';
 import * as path from 'path';
+import Logger from 'bunyan';
 
-import * as akeneo from '../../akeneo';
 import { REFERENCE_ENTITY_CODE } from './helper';
-import * as http from '../../http';
 import { inspect } from '../../inspect';
 import { getLogger } from '../../logger';
 import * as mapper from '../../mapper';
@@ -76,7 +75,7 @@ export async function loadImages(logger: Logger, conn: any): Promise<any[]> {
         }
         if (stream) {
           try {
-            referenceEntitiesMediaFileCode = await http.postMultipartFormData(
+            referenceEntitiesMediaFileCode = await akeneo.postMultipartFormData(
               akeneo.apiUrlReferenceEntityMediaFiles(),
               stream);
             stream.close();
@@ -122,7 +121,7 @@ export async function referenceEntity(logger: any): Promise<any[]> {
     }
   };
   
-  const results = await http.patch(akeneo.apiUrlReferenceEntities(referenceEntity_.code), referenceEntity_);
+  const results = await akeneo.patch(akeneo.apiUrlReferenceEntities(referenceEntity_.code), referenceEntity_);
 
   return results;
 }
@@ -133,7 +132,7 @@ export async function referenceEntityAttributes(logger: any, transformed: any): 
 
   for (const transformedAttribute of transformed.attributes) {
     try {
-      const results = await http.patch(
+      const results = await akeneo.patch(
         akeneo.apiUrlReferenceEntityAttributes(
             transformedAttribute.referenceEntityCode,
             transformedAttribute.referenceEntityAttributeCode),
@@ -147,7 +146,7 @@ export async function referenceEntityAttributes(logger: any, transformed: any): 
 
   for (const transformedOption of transformed.attributeOptions) {
     try {
-      const results = await http.patch(
+      const results = await akeneo.patch(
         akeneo.apiUrlReferenceEntityAttributeOptions(
             transformedOption.referenceEntityCode,
             transformedOption.referenceEntityAttributeCode,
@@ -177,7 +176,7 @@ export async function referenceEntityRecords(logger: any, transformedRecords: an
       if (i === referenceEntityRecords.length || 
           (count > 0 && count % akeneo.patchLimit === 0) || 
           referenceEntityCode !== referenceEntityRecords[i].referenceEntityCode) {
-        const results = await http.patch(
+        const results = await akeneo.patch(
           `${akeneo.apiUrlReferenceEntityRecords(referenceEntityCode)}`,
           referenceEntityData);
 

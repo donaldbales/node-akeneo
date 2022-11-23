@@ -1,0 +1,135 @@
+#!/usr/bin/env -S node --max-old-space-size=8192 --unhandled-rejections=strict
+// A JSON Document per line (VAC) Parsing Utility
+// by Don Bales on 2020-12-05
+
+const fs = require('fs');
+
+async function main() {
+    const args = [];
+    if (process.argv.length > 2) {
+        for (let i = 2; i < process.argv.length; i++) {
+            const arg = process.argv[i]; 
+            args.push(arg);
+        }
+    }
+    // console.log(args);
+
+    let commandDelimiter = '\t'; // default
+    let commandProperties = '';
+    let properties = [];
+    let filename = '';
+
+    let argCount = 0;   
+    for (let i = 0; i < args.length; i++) {
+        // console.log(i);
+        const arg = args[i];
+        // console.log(arg);
+        if (arg === '-d' &&
+            i + 1 < args.length) {
+            // console.log(arg);
+            commandDelimiter = args[i + 1];
+            argCount += 2;
+        } else
+        if (arg === '-p' &&
+            i + 1 < args.length) {
+            // console.log(arg);
+            commandProperties = args[i + 1];
+            properties = commandProperties.split(',');
+            argCount += 2;
+        } else
+        if (i === args.length - 1 &&
+            i === argCount) {
+            // console.log(arg);
+            filename = arg;
+        }
+    }
+
+    let stream = process.stdin;
+    if (filename) {
+        let stat = null;
+        try {
+            stat = fs.statSync(filename);
+        } catch(err) {
+            console.error(err.message);
+            process.exit(1);
+        }
+        if (stat &&
+            stat.size > 0) {
+            stream = fs.createReadStream(filename);
+        }
+    }
+    // console.log(stream);
+
+    const timer = setTimeout(() => { 
+        console.log(`usage: vac [-d " "] [-p properties,...] [filename]`);
+        console.log(`-d, a delimiter, default: tab character`);
+        console.log(`-p, a comma separated list of properties`);
+        console.log(`filename, a Vendor Akeneo Collection (text file with a JSON doc per line)`);
+        process.exit(0);
+    }, 3000);
+
+    let data = '';
+    let documentProperties = new Set();
+    if (stream) {
+        stream.setEncoding('utf8');
+
+        stream.on('data', (chunk) => {
+            clearTimeout(timer);
+            // console.log('stream.on data');
+            // console.log(chunk);
+            data += chunk;
+            let linefeed = 0;
+            while ((linefeed = data.indexOf('\n')) > -1) {
+                // console.log(linefeed);
+                const json = data.slice(0, linefeed).trim();
+                // console.log(json);
+                if (json) {
+                    const doc = JSON.parse(json);
+                    // console.log(doc);
+                    if (properties &&
+                        properties.length > 0) {
+                        let line = '';
+                        for (let i = 0; i < properties.length; i++) {
+                            const property = properties[i];
+                            const value = doc[property] !== undefined ? doc[property] : '';
+                            line += (i < properties.length - 1) ? `${typeof(value) === 'object' ? JSON.stringify(value) : value}${commandDelimiter}` : `${typeof(value) === 'object' ? JSON.stringify(value) : value}`;
+                        }
+                        console.log(line);
+                    } else {
+                        for (const property in doc) {
+                            if (!(documentProperties.has(property))) {
+                                documentProperties.add(property);
+                            }
+                        }
+                    }
+                    data = data.slice(linefeed + 1, data.length);
+                }
+            }
+        });
+
+        stream.on('end', () => {
+            clearTimeout(timer);
+            // console.log('stream.on end');
+            if (documentProperties.size > 0) {
+                const sortable = [];
+                for (const value of documentProperties.values()) {
+                    sortable.push(value);
+                }
+                console.log('Object Properties');
+                console.log('-----------------');
+                for (const value of sortable.sort()) {
+                    console.log(value);
+                }
+            }
+            process.exit(0);
+        });
+
+        stream.on('error', (err) => {
+            clearTimeout(timer);
+            console.error(`stream.on error: ${err.message}`);
+            process.exit(3);
+        });
+    }
+} 
+
+main();

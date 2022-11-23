@@ -1,7 +1,6 @@
+import * as akeneo from 'node-akeneo-api';
 import Logger from 'bunyan';
 
-import * as akeneo from '../akeneo';
-import * as http from '../http';
 import { Product } from '../interfaces/Product';
 import { ProductAssociation } from '../interfaces/ProductAssociation';
 import { ProductModel } from '../interfaces/ProductModel';
@@ -14,7 +13,7 @@ export async function products(logger: Logger, data: any[]): Promise<any> {
   logger.info({ moduleName, methodName }, 'Starting...');
 
   const productz: any[] = data;
-  const results = await http.patchVndAkeneoCollection(akeneo.apiUrlProducts(), productz);
+  const results = await akeneo.patchVndAkeneoCollection(akeneo.apiUrlProducts(), productz);
   logger.info({ moduleName, methodName, results });
 
   return ['OK'];

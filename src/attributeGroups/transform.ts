@@ -1,8 +1,8 @@
-import Logger from 'bunyan';
+import * as akeneo from 'node-akeneo-api';
 import * as fs from 'fs';
 import * as path from 'path';
+import Logger from 'bunyan';
 
-import * as akeneo from '../akeneo';
 import { AttributeGroup } from '../interfaces/AttributeGroup';
 
 const exportPath: string = (process.env.AKENEO_EXPORT_PATH as string) || '.';

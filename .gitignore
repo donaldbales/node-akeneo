@@ -1,9 +1,10 @@
 **.DS_Store
 *.txt
+*.20*
+*.ts.20*
 code_writer.xlsx
-data
-data-v4
-examinations-v4
+data*
+examinations*
 runlocal
 setenv
 

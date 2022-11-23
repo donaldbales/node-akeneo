@@ -1,12 +1,11 @@
-import Logger from 'bunyan';
+import * as akeneo from 'node-akeneo-api';
 import * as fs from 'fs';
 import * as path from 'path';
+import Logger from 'bunyan';
 
-import * as akeneo from '../../akeneo';
 import { ASSET_FAMILY_CODE } from './helper';
 import { AssetFamily } from '../../interfaces/AssetFamily';
 import { AssetFamilyAsset } from '../../interfaces/AssetFamilyAsset';
-import * as http from '../../http';
 import { inspect } from '../../inspect';
 import { getLogger } from '../../logger';
 import * as mapper from '../../mapper';
@@ -78,7 +77,7 @@ export async function loadImages(logger: Logger, conn: any, startPKey: string = 
         if (stream) {
           try {
             assetFamiliesMediaFileCode = '';
-            assetFamiliesMediaFileCode = await http.postMultipartFormData(
+            assetFamiliesMediaFileCode = await akeneo.postMultipartFormData(
               akeneo.apiUrlAssetFamilyMediaFiles(),
               stream);
             logger.info({ moduleName, methodName, imagePath, assetFamiliesMediaFileCode });
@@ -129,7 +128,7 @@ export async function assetFamily(logger: any): Promise<any[]> {
     }
   };
   
-  const results = await http.patch(akeneo.apiUrlAssetFamilies(assetFamily_.code), assetFamily_);
+  const results = await akeneo.patch(akeneo.apiUrlAssetFamilies(assetFamily_.code), assetFamily_);
 
   return results;
 }
@@ -140,7 +139,7 @@ export async function assetFamilyAttributes(logger: any, transformed: any): Prom
 
   for (const transformedAttribute of transformed.attributes) {
     try {
-      const results = await http.patch(
+      const results = await akeneo.patch(
         akeneo.apiUrlAssetFamilyAttributes(
             transformedAttribute.assetFamilyCode,
             transformedAttribute.assetFamilyAttributeCode),
@@ -154,7 +153,7 @@ export async function assetFamilyAttributes(logger: any, transformed: any): Prom
 
   for (const transformedOption of transformed.attributeOptions) {
     try {
-      const results = await http.patch(
+      const results = await akeneo.patch(
         akeneo.apiUrlAssetFamilyAttributeOptions(
             transformedOption.assetFamilyCode,
             transformedOption.assetFamilyAttributeCode,
@@ -184,7 +183,7 @@ export async function assetFamilyAssets(logger: any, transformedAssets: any[]): 
       if (i === assetFamilyAssets.length || 
           (count > 0 && count % akeneo.patchLimit === 0) || 
           assetFamilyCode !== assetFamilyAssets[i].assetFamilyCode) {
-        const results = await http.patch(
+        const results = await akeneo.patch(
           `${akeneo.apiUrlAssetFamilyAssets(assetFamilyCode)}`,
           assetFamilyData);
 

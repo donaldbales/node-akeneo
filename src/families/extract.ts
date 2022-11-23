@@ -1,6 +1,6 @@
-import Logger from 'bunyan';
 import * as fs from 'fs';
 import * as path from 'path';
+import Logger from 'bunyan';
 
 import { getLogger } from '../logger';
 

@@ -1,11 +1,10 @@
-import Logger from 'bunyan';
+import * as akeneo from 'node-akeneo-api';
 import * as fs from 'fs';
 import * as path from 'path';
+import Logger from 'bunyan';
 
-import * as akeneo from '../../akeneo';
 import * as extract from './extract';
 import { REFERENCE_ENTITY_CODE } from './helper';
-import * as http from '../../http';
 import { getLogger } from '../../logger';
 import * as load from './load';
 import * as transform from './transform';

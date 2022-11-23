@@ -23,7 +23,7 @@ export function getLogger(name: string): any {
   // wrapper
   const result = {
     debug: logger.debug.bind(logger),
-    error: emailError,
+    error: logger.error.bind(logger), //emailError,
     fatal: emailError,
     info: logger.info.bind(logger),
     level: logger.level.bind(logger),

@@ -1,9 +1,9 @@
-import Logger from 'bunyan';
+import * as akeneo from 'node-akeneo-api';
 import * as fs from 'fs';
 import * as path from 'path';
+import Logger from 'bunyan';
 import { URL } from 'url';
 
-import * as akeneo from '../../akeneo';
 import { ASSET_FAMILY_CODE } from './helper';
 import { exec } from '../../executor';
 import { inspect } from '../../inspect';

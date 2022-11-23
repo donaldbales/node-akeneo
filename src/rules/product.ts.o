@@ -1,0 +1,1242 @@
+import Logger from 'bunyan';
+import * as fs from 'fs';
+import * as yaml from 'js-yaml';
+import * as path from 'path';
+import { Readable } from 'stream';
+import * as readline from 'readline';
+
+import * as akeneo from '../akeneo';
+import * as http from '../http';
+import { inspect } from '../inspect';
+import { getLogger } from '../logger';
+import * as mapper from '../mapper';
+import { ActionsTaken } from '../interfaces/ActionsTaken';
+import { Metric } from '../interfaces/Metric';
+import { Product } from '../interfaces/Product';
+import * as readliner from '../readliner';
+
+const exportPath: string = (process.env.AKENEO_EXPORT_PATH as string) || '.';
+const moduleName: string = 'rules/products';
+
+/*
+Structure’s elements which define a rule are:
+
+    rule’s code (dynamic)*
+    priority
+    enabled
+    conditions*
+		Structure’s elements which define a condition are:
+
+	        value* created|updated|enabled|completeness|family|family_variant|entity_type|parent|groups|categories|any attribute
+	        locale
+	        scope
+	        operator* =|!=|>|>=|<|<=|BETWEEN|NOT BETWEEN|EMPTY|NOT EMPTY|IN|NOT IN|STARTS WITH|CONTAINS|DOES NOT CONTAIN
+	        	UNCLASSIFIED|IN OR UNCLASSIFIED|IN CHILDREN|NOT IN CHILDREN
+	        value*
+    actions*
+			type* copy|set|add|remove|clear|calculate
+
+    labels
+
+date format: yyyy-mm-dd HH:MM:SS|now|interval
+
+
+
+Interval: The “relative date format” allows to specify dates that are relative to the rule execution’s date, it is formatted as follows:
+
+<+/-><count> <unit>, with:
+
+    “+” means a date in the future, “-“ a date in the past
+    count is an integer
+    unit is one of the following values: minute, hour, day, week, month or year with an optional final s
+
+For instance, +1 month means in one month, and -2 days means 2 days ago
+
+x'd are supported y Akeneo PIM rules engine:
+
+x export const AKENEO_REFERENCE_ENTITY: string            = 'akeneo_reference_entity';
+x export const AKENEO_REFERENCE_ENTITY_COLLECTION: string = 'akeneo_reference_entity_collection';
+export const PIM_CATALOG_ASSET_COLLECTION: string       = 'pim_catalog_asset_collection';      
+x export const PIM_CATALOG_BOOLEAN: string                = 'pim_catalog_boolean';
+x export const PIM_CATALOG_DATE: string                   = 'pim_catalog_date';
+x export const PIM_CATALOG_FILE: string                   = 'pim_catalog_file';
+export const PIM_CATALOG_IDENTIFIER: string             = 'pim_catalog_identifier';
+x export const PIM_CATALOG_IMAGE: string                  = 'pim_catalog_image';
+x export const PIM_CATALOG_METRIC: string                 = 'pim_catalog_metric';
+x export const PIM_CATALOG_MULTISELECT: string            = 'pim_catalog_multiselect';
+x export const PIM_CATALOG_NUMBER: string                 = 'pim_catalog_number';
+x export const PIM_CATALOG_PRICE_COLLECTION: string       = 'pim_catalog_price_collection';
+x export const PIM_CATALOG_SIMPLESELECT: string           = 'pim_catalog_simpleselect';
+x export const PIM_CATALOG_TEXT: string                   = 'pim_catalog_text';
+x export const PIM_CATALOG_TEXTAREA: string               = 'pim_catalog_textarea';
+export const PIM_REFERENCE_DATA_MULTISELECT: string     = 'pim_reference_data_multiselect';
+export const PIM_REFERENCE_DATA_SIMPLESELECT: string    = 'pim_reference_data_simpleselect';
+*/
+
+// Actions
+
+export const ADD: string = 'add';
+export const CALCULATE: string = 'calculate';
+export const CLEAR: string = 'clear';
+export const CONCATENATE: string = 'concatenate';
+export const COPY: string = 'copy';
+export const REMOVE: string = 'remove';
+export const SET: string = 'set';
+
+
+function add(logger: Logger, actions: any[], doc: any): ActionsTaken {
+	const results: ActionsTaken = {
+		original: doc,
+		modified: { identifier: doc.identifier, values: {} },
+		modifications: 0
+	};
+
+	return results;
+}
+
+function calculate(logger: Logger, actions: any[], doc: any): ActionsTaken {
+	const results: ActionsTaken = {
+		original: doc,
+		modified: { identifier: doc.identifier, values: {} },
+		modifications: 0
+	};
+
+	return results;
+}
+
+function clear(logger: Logger, actions: any[], doc: any): ActionsTaken {
+	const results: ActionsTaken = {
+		original: doc,
+		modified: { identifier: doc.identifier, values: {} },
+		modifications: 0
+	};
+
+	return results;
+}
+
+function concatenate(logger: Logger, actions: any[], doc: any): ActionsTaken {
+	const results: ActionsTaken = {
+		original: doc,
+		modified: { identifier: doc.identifier, values: {} },
+		modifications: 0
+	};
+
+	return results;
+}
+
+function copy(logger: Logger, actions: any[], doc: any): ActionsTaken {
+	const methodName: string = 'copy';
+/*
+    from_field: code of the attribute to be copied.
+    from_locale: locale code of the field to be copied (optional).
+    from_scope: channel code of the field to be copied (optional).
+    to_field: attribute code the field will be copied into.
+    to_locale: locale code the field will be copied into (optional).
+    to_scope: channel code the field will be copied into (optional).
+*/
+	const results: ActionsTaken = {
+		original: doc,
+		modified: { identifier: doc.identifier, values: {} },
+		modifications: 0
+	};
+	for (const action of actions) {
+		if (action.from_field !== undefined &&
+			action.to_field   !== undefined) {
+			let fromField: string = action.from_field;
+			let toField: string = action.to_field;
+			let fromValues: boolean = false;
+			let fromLocale: string = action.from_locale !== undefined ? action.from_locale : '';
+			let fromScope: string = action.from_scope !== undefined ? action.from_scope : '';
+			let fromValue: any = '';
+			switch (fromField) {
+				case 'family':
+					fromValue = doc[fromField];
+					break;
+				case 'categories':
+					fromValue = doc[fromField];
+					break;
+				case 'groups':
+					fromValue = doc[fromField];
+					break;
+				case 'parent':
+					fromValue = doc[fromField];
+					break;
+				case 'created':
+					fromValue = doc[fromField];
+					break;
+				case 'updated':
+					fromValue = doc[fromField];
+					break;
+				case 'associations':
+					fromValue = doc[fromField];
+					break;
+				case 'metadata':
+					fromValue = doc[fromField];
+					break;
+				default:
+					fromValues = true;
+					const map: Map<string, any> = new Map();
+					if (doc.values[fromField] !== undefined) {
+						for (const valuesObject of doc.values[fromField]) {
+							const locale: string = valuesObject.locale ? valuesObject.locale : '';
+							const scope: string = valuesObject.scope ? valuesObject.scope : '';
+							const data: any = valuesObject.data ? valuesObject.data : '';
+							map.set(`${locale}|${scope}`, data);
+						}
+					}
+					const key: string = `${fromLocale}${fromScope}`;
+					fromValue = map.get(key) !== undefined ? map.get(key) : '';
+			}
+			let currentValues: boolean = false;
+			let currentLocale: string = action.to_locale !== undefined ? action.to_locale : '';
+			let currentScope: string = action.to_scope !== undefined ? action.to_scope : '';
+			let currentValue: any = '';
+			switch (toField) {
+				case 'family':
+					currentValue = doc[toField];
+					break;
+				case 'categories':
+					currentValue = doc[toField];
+					break;
+				case 'groups':
+					currentValue = doc[toField];
+					break;
+				case 'parent':
+					currentValue = doc[toField];
+					break;
+				case 'created':
+					currentValue = doc[toField];
+					break;
+				case 'updated':
+					currentValue = doc[toField];
+					break;
+				case 'associations':
+					currentValue = doc[toField];
+					break;
+				case 'metadata':
+					currentValue = doc[toField];
+					break;
+				default:
+					currentValues = true;
+					const map: Map<string, any> = new Map();
+					if (doc.values[toField] !== undefined) {
+						for (const valuesObject of doc.values[toField]) {
+							const locale: string = valuesObject.locale ? valuesObject.locale : '';
+							const scope: string = valuesObject.scope ? valuesObject.scope : '';
+							const data: any = valuesObject.data ? valuesObject.data : '';
+							map.set(`${locale}|${scope}`, data);
+						}
+					}
+					const key: string = `${currentLocale}${currentScope}`;
+					currentValue = map.get(key) !== undefined ? map.get(key) : '';
+			}
+			if (fromValues && currentValues) {
+				// valuesObject to valuesObject
+				if (fromValue !== currentValue) {
+					const valuesObject: any = {
+						locale: currentLocale ? currentLocale : null,
+						scope: currentScope ? currentScope : null,
+						data: fromValue ? fromValue : null
+					};
+					results.modified.values[toField] = [];
+					for (const existingValuesObject of doc.values[toField]) {
+						const locale: string = existingValuesObject.locale ? existingValuesObject.locale : '';
+						const scope: string = existingValuesObject.scope ? existingValuesObject.scope : '';
+						if (locale !== currentLocale &&
+							scope !== currentScope) {
+							results.modified.values[toField].push(existingValuesObject)		
+						} else {
+							results.modified.values[toField].push(valuesObject);		
+						}
+					}
+				} 
+			} else
+			if (fromValues && !(currentValues)) {
+				// valuesObject to column
+				switch (toField) {
+					case 'family':
+						
+						break;
+					case 'categories':
+						
+						break;
+					case 'groups':
+						
+						break;
+					case 'parent':
+						
+						break;
+					case 'created':
+						
+						break;
+					case 'updated':
+						
+						break;
+					case 'associations':
+						
+						break;
+					case 'metadata':
+						
+						break;
+					default:
+				}
+			} else
+			if (!(fromValues) && currentValues) {
+				// column to valuesObject
+				if (fromValue !== currentValue) {
+					const valuesObject: any = {
+						locale: currentLocale ? currentLocale : null,
+						scope: currentScope ? currentScope : null,
+						data: fromValue ? fromValue : null
+					};
+					results.modified.values[toField] = [];
+					for (const existingValuesObject of doc.values[toField]) {
+						const locale: string = existingValuesObject.locale ? existingValuesObject.locale : '';
+						const scope: string = existingValuesObject.scope ? existingValuesObject.scope : '';
+						if (locale !== currentLocale &&
+							scope !== currentScope) {
+							results.modified.values[toField].push(existingValuesObject)		
+						} else {
+							results.modified.values[toField].push(valuesObject);		
+						}
+					}
+				} 
+			} else
+			if (!(fromValues) && !(currentValues)) {
+				// column to column
+				switch (toField) {
+					case 'family':
+						
+						break;
+					case 'categories':
+						
+						break;
+					case 'groups':
+						
+						break;
+					case 'parent':
+						
+						break;
+					case 'created':
+						
+						break;
+					case 'updated':
+						
+						break;
+					case 'associations':
+						
+						break;
+					case 'metadata':
+						
+						break;
+					default:
+				}
+			} else {
+				throw new Error(`There is something seriously wrong with your code buddy, in ${moduleName}#{methodName}.`);
+			}
+		}
+	}
+	return results;
+}
+
+function remove(logger: Logger, actions: any[], doc: any): ActionsTaken {
+	const results: ActionsTaken = {
+		original: doc,
+		modified: { identifier: doc.identifier, values: {} },
+		modifications: 0
+	};
+
+	return results;
+}
+
+function set(logger: Logger, actions: any[], doc: any): ActionsTaken {
+	const results: ActionsTaken = {
+		original: doc,
+		modified: { identifier: doc.identifier, values: {} },
+		modifications: 0
+	};
+
+	return results;
+}
+
+// Operators
+
+export const BETWEEN: string = 'BETWEEN'
+export const CONTAINS: string = 'CONTAINS'
+export const DOES_NOT_CONTAIN: string = 'DOES NOT CONTAIN';
+export const EMPTY: string = 'EMPTY'
+export const EQUAL_TO: string = '=';
+export const GREATER_THAN: string = '>';
+export const GREATER_THAN_OR_EQUAL_TO: string = '>=';
+export const IN: string = 'IN'
+export const IN_CHILDREN: string = 'IN CHILDREN'
+export const IN_OR_UNCLASSIFIED: string = 'IN OR UNCLASSIFIED'
+export const LESS_THAN: string = '<';
+export const LESS_THAN_OR_EQUAL_TO: string = '<='
+export const NOT_EQUAL_TO: string = '!=';
+export const NOT_BETWEEN: string = 'NOT BETWEEN'
+export const NOT_EMPTY: string = 'NOT EMPTY'
+export const NOT_IN: string = 'NOT IN'
+export const NOT_IN_CHILDREN: string = 'NOT IN CHILDREN';
+export const STARTS_WITH: string = 'STARTS WITH'
+export const UNCLASSIFIED: string = 'UNCLASSIFIED'
+
+function comparisonType(logger: Logger, datum: any): string {
+	const methodName: string = 'comparisonType';
+
+	// see: https://api.akeneo.com/concepts/products.html#the-data-format
+
+	switch (typeof(datum)) {
+		// case 'bigint':
+		//  	return 'bigint';
+		// 	break;
+		case 'boolean':
+			return 'boolean';
+			break;
+		case 'function':
+			throw new Error('Unsupported type');
+			break
+		case 'number':
+			return 'number';
+			break;
+		case 'object':
+			if (datum instanceof Array &&
+				datum[0] &&
+				datum[0]['amount'] &&
+				datum[0]['currency']) {
+				return 'price';
+			} else
+			if (datum instanceof Array) {
+				return 'array';
+			} else
+			// if (datum instanceof BigInt) {
+			// 	return 'bigint';
+			// } else
+			if (datum instanceof Date) {
+				return 'date';
+			} else
+			if (datum === null) {
+				return 'null';
+			} else 
+			if (datum['amount'] &&
+				datum['unit']) {
+				return 'metric';
+			} else
+			if (datum instanceof Number) {
+				return 'number';
+			} else
+			if (datum instanceof String) {
+				return 'string';
+			} else {
+				return 'object';
+			}
+			break;
+		case 'string':
+			return  'string';
+			break;
+		case 'symbol':
+			throw new Error('Unsupported type');
+			break;
+		case 'undefined':
+			throw new Error('Unsupported type');
+			break;
+		default:
+			throw new Error('Unsupported type');
+	}
+}
+
+function between(logger: Logger, field: any, value: any): number {
+	const methodName: string = 'contains';
+	const fieldType: string = comparisonType(logger, field);
+	const valueType: string = comparisonType(logger, value);
+
+	throw new Error('between not yet coded.');
+
+	return 0;
+}
+
+/*****************************************************************************
+                              C O N T A I N S 
+ *****************************************************************************/
+
+function contains(logger: Logger, field: any, value: any): number {
+	const methodName: string = 'contains';
+	const fieldType: string = comparisonType(logger, field);
+	const valueType: string = comparisonType(logger, value);
+	/*
+		A field is a column from the underlying table or a value object's 
+		"data" property from the underlying table's values column
+	*/
+	switch (fieldType) {
+		case 'array':
+			switch (valueType) {
+				case 'array':
+					return field.indexOf(value) > -1 ? 1 : 0; 
+					break;
+				case 'boolean':
+					return field.indexOf(value) > -1 ? 1 : 0; 
+					break;
+				case 'metric':
+					return field.indexOf(value) > -1 ? 1 : 0; 
+					break;
+				case 'number':
+					return field.indexOf(value) > -1 ? 1 : 0; 
+					break;
+				case 'price':
+					return field.indexOf(value) > -1 ? 1 : 0; 
+					break;
+				case 'string':
+					return field.indexOf(value) > -1 ? 1 : 0; 
+					break;
+				default:
+					throw new Error(`Unsupported value type: ${valueType} in ${moduleName}#${methodName}.`);
+			}
+			break;
+		case 'boolean':
+			switch (valueType) {
+				case 'boolean':
+					return field === value ? 1 : 0;
+					break;
+				default:
+					throw new Error(`Unsupported value type: ${valueType} in ${moduleName}#${methodName}.`);
+			}
+			break;
+		case 'date':
+			switch (valueType) {
+				case 'number':
+					return field.getTime() === value ? 1 : 0;
+					break;
+				case 'string':
+					return field.toISOString().indexOf(value) > -1 ? 1 : 0;
+					break;
+				default:
+					throw new Error(`Unsupported value type: ${valueType} in ${moduleName}#${methodName}.`);
+			}
+			break;
+		case 'metric':
+			switch (valueType) {
+				case 'metric':
+					if (field.amount !== undefined &&
+						value.amount !== undefined &&
+						field.unit   !== undefined &&
+						value.unit   !== undefined &&
+						field.amount === value.amount &&
+						field.unit   === value.unit) {
+						return 1;
+					}
+					return 0;
+					break;
+				case 'string':
+					let value_: any = {};
+					try {
+						value_ = JSON.parse(value);
+					}
+					catch (err) {
+						logger.error({ moduleName, methodName, err }, `Parsing JSON in metric and string comparison.`);
+						value_ = {};
+					}
+					if (field.amount  !== undefined &&
+						value_.amount !== undefined &&
+						field.unit    !== undefined &&
+						value_.unit   !== undefined &&
+						field.amount  === value_.amount &&
+						field.unit    === value_.unit) {
+						return 1;
+					}
+					return 0;
+					break;
+				default:
+					throw new Error(`Unsupported value type: ${valueType} in ${moduleName}#${methodName}.`);
+			}
+			break;
+		case 'number':
+			switch (valueType) {
+				case 'number':
+					return field === value ? 1 : 0;
+					break;
+				case 'string':
+					return field === Number(value) ? 1 : 0;
+					break;
+				default:
+					throw new Error(`Unsupported value type: ${valueType} in ${moduleName}#${methodName}.`);
+			}
+			break;
+		case 'price':
+			switch (valueType) {
+				case 'price':
+					for (const field_ of field) {
+						for (const value_ of value) {
+							if (field_.amount   !== undefined &&
+								value_.amount   !== undefined &&
+								field_.currency !== undefined &&
+								value_.currency !== undefined &&
+								field_.amount   === value_.amount &&
+								field_.currency === value_.currency) {
+								return 1;
+							}
+						}
+					}
+					return 0;
+					break;
+				case 'string':
+					let values: any = [];
+					try {
+						values = JSON.parse(value);
+						if (!(values instanceof Array)) {
+							values = [ values ];
+						}
+					}
+					catch (err) {
+						logger.error({ moduleName, methodName, err }, `Parsing JSON in price and string comparison.`);
+						values = [];
+					}
+					for (const field_ of field) {
+						for (const value_ of values) {
+							if (field_.amount   !== undefined &&
+								value_.amount   !== undefined &&
+								field_.currency !== undefined &&
+								value_.currency !== undefined &&
+								field_.amount   === value_.amount &&
+								field_.currency === value_.currency) {
+								return 1;
+							}
+						}
+					}
+					return 0;
+					break;
+				default:
+					throw new Error(`Unsupported value type: ${valueType} in ${moduleName}#${methodName}.`);
+			}
+			break;
+		case 'string':
+			switch (valueType) {
+				case 'boolean':
+					return field === value.toString() ? 1 : 0;
+					break;
+				case 'number':
+					return field === value.toString() ? 1 : 0;
+					break;
+				case 'string':
+					return field === value ? 1 : 0;
+					break;
+				default:
+					throw new Error(`Unsupported value type: ${valueType} in ${moduleName}#${methodName}.`);
+			}
+			break;
+		default:
+			throw new Error(`Unsupported field type: ${fieldType} in ${moduleName}#${methodName}.`);
+	}
+
+	return 0;
+}
+
+/*****************************************************************************
+                                  E M P T Y 
+ *****************************************************************************/
+
+function empty(logger: Logger, field: any, value: any): number {
+	/*
+	In PHP:
+	A variable is considered empty if it does not exist or if its field equals false. 
+	empty() does not generate a warning if the variable does not exist.
+	
+	When converting to bool, the following values are considered false:
+		the boolean false itself
+		the integer 0 (zero)
+		the floats 0.0 and -0.0 (zero)
+		the empty string, and the string "0"
+		an array with zero elements
+		the special type NULL (including unset variables)
+		SimpleXML objects created from attributeless empty elements, 
+		i.e. elements which have neither children nor attributes.
+	*/
+	const methodName: string = 'contains';
+
+	const fieldType: string = comparisonType(logger, field);
+	const valueType: string = comparisonType(logger, value);
+
+	switch (fieldType) {
+		case 'array':
+			return field && field.length > 0 ? 0 : 1;
+			break;
+		case 'boolean':
+			return field ? 0 : 1;
+			break;
+		case 'date':
+            return field ? 0 : 1;
+			break;
+		case 'metric':
+			return value['amount'] && value['unit'] ? 0 : 1;
+			break;
+		case 'number':
+			return field && field !== 0 ? 0 : 1;
+			break;
+		case 'price':
+			return value['amount'] && value['currency'] ? 0 : 1;
+			break;
+		case 'string':
+			return field.length > 0 ? 0 : 1;
+			break;
+		default:
+			throw new Error(`Unsupported field type: ${fieldType} in ${moduleName}#${methodName}.`);
+	}
+
+	return 0;
+}
+
+/*****************************************************************************
+                               E Q U A L   T O 
+ *****************************************************************************/
+
+function equalTo(logger: Logger, field: any, value: any): number {
+	const methodName: string = 'contains';
+
+	const fieldType: string = comparisonType(logger, field);
+	const valueType: string = comparisonType(logger, value);
+
+	switch (fieldType) {
+		case 'array':
+			switch (valueType) {
+				case 'array':
+					for (const field_ of field) {
+						for (const value_ of value) {
+							if (field_ !== value_) {
+								return 0;
+							}
+						}
+					}
+					return 1;
+					break;
+				case 'boolean':
+					return field.length = 1 && field[0] && field[0] === value ? 1 : 0; 
+					break;
+				case 'metric':
+					for (const field_ of field) {
+						for (const value_ of value) {
+							if (field_.amount === undefined ||
+								value_.amount === undefined ||
+								field_.unit   === undefined ||
+								value_.unit   === undefined ||
+								field_.amount !== value_.amount ||
+								field_.unit   !== value_.unit) {
+								return 0;
+							}
+						}
+					}
+					return 1;
+					break;
+				case 'number':
+					return field.length = 1 && field[0] && field[0] === value ? 1 : 0; 
+					break;
+				case 'price':
+					for (const field_ of field) {
+						for (const value_ of value) {
+							if (value_.amount   === undefined ||
+								field_.amount   === undefined ||
+								field_.currency === undefined ||
+								value_.currency === undefined ||
+								field_.amount   !== value_.amount ||
+								field_.currency !== value_.currency) {
+								return 0;
+							}
+						}
+					}
+					return 1;
+					break;
+				case 'string':
+					return field.length = 1 && field[0] && field[0] === value ? 1 : 0; 
+					break;
+				default:
+					throw new Error(`Unsupported value type: ${valueType} in ${moduleName}#${methodName}.`);
+			}
+			break;
+		case 'boolean':
+			switch (valueType) {
+				case 'boolean':
+					return field === value ? 1 : 0;
+					break;
+				default:
+					throw new Error(`Unsupported value type: ${valueType} in ${moduleName}#${methodName}.`);
+			}
+			break;
+		case 'date':
+			switch (valueType) {
+				case 'number':
+					return field.getTime() === value ? 1 : 0;
+					break;
+				case 'string':
+					return field.toISOString() === value ? 1 : 0;
+					break;
+				default:
+					throw new Error(`Unsupported value type: ${valueType} in ${moduleName}#${methodName}.`);
+			}
+			break;
+		case 'metric':
+			switch (valueType) {
+				case 'metric':
+					if (field.amount === undefined ||
+						value.amount === undefined ||
+						field.unit   === undefined ||
+						value.unit   === undefined ||
+						field.amount !== value.amount ||
+						field.unit   !== value.unit) {
+						return 0;
+					}
+					return 1;
+					break;
+				case 'string':
+					let value_: any = {};
+					try {
+						value_ = JSON.parse(value);
+					}
+					catch (err) {
+						logger.error({ moduleName, methodName, err }, `Parsing JSON in metric and string comparison.`);
+						value_ = {};
+					}
+					if (field.amount  === undefined ||
+						value_.amount === undefined ||
+						field.unit    === undefined ||
+						value_.unit   === undefined ||
+						field.amount  !== value_.amount ||
+						field.unit    !== value_.unit) {
+						return 0;
+					}
+					return 1;
+					break;
+				default:
+					throw new Error(`Unsupported value type: ${valueType} in ${moduleName}#${methodName}.`);
+			}
+			break;
+		case 'number':
+			switch (valueType) {
+				case 'number':
+					return field === value ? 1 : 0;
+					break;
+				case 'string':
+					return field === Number(value) ? 1 : 0;
+					break;
+				default:
+					throw new Error(`Unsupported value type: ${valueType} in ${moduleName}#${methodName}.`);
+			}
+			break;
+		case 'price':
+			switch (valueType) {
+				case 'price':
+					for (const field_ of field) {
+						for (const value_ of value) {
+							if (field_.amount   === undefined ||
+								value_.amount   === undefined ||
+								field_.currency === undefined ||
+								value_.currency === undefined ||
+								field_.amount   !== value_.amount ||
+								field_.currency !== value_.currency) {
+								return 0;
+							}
+						}
+					}
+					return 1;
+					break;
+				case 'string':
+					let values: any = [];
+					try {
+						values = JSON.parse(value);
+						if (!(values instanceof Array)) {
+							values = [ values ];
+						}
+					}
+					catch (err) {
+						logger.error({ moduleName, methodName, err }, `Parsing JSON in price and string comparison.`);
+						values = [];
+					}
+					for (const field_ of field) {
+						for (const value_ of values) {
+							if (field_.amount   === undefined ||
+								value_.amount   === undefined ||
+								field_.currency === undefined ||
+								value_.currency === undefined ||
+								field_.amount   !== value_.amount ||
+								field_.currency !== value_.currency) {
+								return 0;
+							}
+						}
+					}
+					return 1;
+					break;
+				default:
+					throw new Error(`Unsupported value type: ${valueType} in ${moduleName}#${methodName}.`);
+			}
+			break;
+		case 'string':
+			switch (valueType) {
+				case 'array':
+					return field === value.toString() ? 1 : 0;
+					break;
+				case 'boolean':
+					return field === value.toString() ? 1 : 0;
+					break;
+				case 'number':
+					return field === value.toString() ? 1 : 0;
+					break;
+				case 'string':
+					return field === value ? 1 : 0;
+					break;
+				default:
+					throw new Error(`Unsupported value type: ${valueType} in ${moduleName}#${methodName}.`);
+			}
+			break;
+		default:
+			throw new Error(`Unsupported field type: ${fieldType} in ${moduleName}#${methodName}.`);
+	}
+
+	return 0;
+}
+
+function greaterThan(logger: Logger, field: any, value: any): number {
+	
+	return 0;
+}
+
+function inChildren(logger: Logger, field: any, value: any): number {
+	
+	return 0;
+}
+
+function inOrUnclassified(logger: Logger, field: any, value: any): number {
+	
+	return 0;
+}
+
+function lessThan(logger: Logger, field: any, value: any): number {
+	
+	return 0;
+}
+
+function startsWith(logger: Logger, field: any, value: any): number {
+	
+	return 0;
+}
+
+function unclassified(logger: Logger, field: any, value: any): number {
+	
+	return 0;
+}
+
+/*
+{
+	"identifier":"tmp_160906",
+	"enabled":false,
+	"family":null,
+	"categories":["repair"],
+	"groups":[],
+	"parent":null,
+	"values":
+		{"sku_type":[{"locale":null,"scope":null,"data":"I"}],
+		"divisions":[{"locale":null,"scope":null,"data":"div_1"}],
+		"manufacturer":[{"locale":null,"scope":null,"data":"16"}],
+		"primary_color":[{"locale":null,"scope":null,"data":"onecolor"}],
+		"buyer":[{"locale":null,"scope":null,"data":"CLAUDIA GONZALEZ"}],
+		"skukey":[{"locale":null,"scope":null,"data":"201104270160906"}],
+		"weight":[{"locale":null,"scope":null,"data":"0.0"}],
+		"factory":[{"locale":null,"scope":null,"data":"KUEBIX"}],
+		"class_id":[{"locale":null,"scope":null,"data":"27"}],
+		"class_name":[{"locale":null,"scope":null,"data":"NIC NACS"}],
+		"vendor_sku":[{"locale":null,"scope":null,"data":"25021"}],
+		"sku_url_key":[{"locale":null,"scope":null,"data":"one-color-tabletop-accessory-160906"}],
+		"subclass_id":[{"locale":null,"scope":null,"data":"1"}],
+		"subgroup_id":[{"locale":null,"scope":null,"data":"0"}],
+		"buying_group":[{"locale":null,"scope":null,"data":"98"}],
+		"case_package":[{"locale":null,"scope":null,"data":"2"}],
+		"width_inches":[{"locale":null,"scope":null,"data":"12.00"}],
+		"height_inches":[{"locale":null,"scope":null,"data":"12.00"}],
+		"length_inches":[{"locale":null,"scope":null,"data":"12.00"}],
+		"selling_group":[{"locale":null,"scope":null,"data":"1699"}],
+		"sku_desc_html":[{"locale":null,"scope":null,"data":"Tabletop Accessory"}],
+		"subclass_name":[{"locale":null,"scope":null,"data":"TABLETOP ACCESSORY"}],
+		"subgroup_name":[{"locale":null,"scope":null,"data":"TABLETOP ACCESSORY"}],
+		"vendor_number":[{"locale":null,"scope":null,"data":"16"}],
+		"sku_desc_short":[{"locale":null,"scope":null,"data":"IM CER PEARL VS TALL"}],
+		"vendor_initials":[{"locale":null,"scope":null,"data":"IM"}],
+		"cubic_feet_boxed":[{"locale":null,"scope":null,"data":"1.00"}],
+		"minimum_order_qty":[{"locale":null,"scope":null,"data":"0"}],
+		"short_description":[{"locale":null,"scope":null,"data":"One/color Tabletop Accessory"}],
+		"cubic_feet_assembled":[{"locale":null,"scope":null,"data":"1.00"}],
+		"dimensions_assembled":[{"locale":null,"scope":null,"data":"0.00\"W x 0.00\"D x 0.00\"H"}],
+		"width_inches_assembled":[{"locale":null,"scope":null,"data":"0.00"}],
+		"height_inches_assembled":[{"locale":null,"scope":null,"data":"0.00"}],
+		"length_inches_assembled":[{"locale":null,"scope":null,"data":"0.00"}],
+		"inhome_service_available":[{"locale":null,"scope":null,"data":"true"}],
+		"diameter_inches_assembled":[{"locale":null,"scope":null,"data":"0.00"}],
+		"stain_protection_available":[{"locale":null,"scope":null,"data":"false"}],
+		"massage":[{"locale":null,"scope":null,"data":false}],
+		"storage":[{"locale":null,"scope":null,"data":false}],
+		"castored":[{"locale":null,"scope":null,"data":false}],
+		"lift_top":[{"locale":null,"scope":null,"data":false}],
+		"is_active":[{"locale":null,"scope":null,"data":false}],
+		"usb_ports":[{"locale":null,"scope":null,"data":false}],
+		"is_on_sale":[{"locale":null,"scope":null,"data":false}],
+		"web_enable":[{"locale":null,"scope":null,"data":false}],
+		"cup_holders":[{"locale":null,"scope":null,"data":false}],
+		"dvd_storage":[{"locale":null,"scope":null,"data":false}],
+		"auto_reorder":[{"locale":null,"scope":null,"data":false}],
+		"game_storage":[{"locale":null,"scope":null,"data":false}],
+		"is_clearance":[{"locale":null,"scope":null,"data":false}],
+		"not_at_store":[{"locale":null,"scope":null,"data":false}],
+		"pullout_tray":[{"locale":null,"scope":null,"data":false}],
+		"serving_tray":[{"locale":null,"scope":null,"data":false}],
+		"wine_storage":[{"locale":null,"scope":null,"data":false}],
+		"rocker_glider":[{"locale":null,"scope":null,"data":false}],
+		"cnf_web_enable":[{"locale":null,"scope":null,"data":false}],
+		"dropdown_table":[{"locale":null,"scope":null,"data":false}],
+		"hidden_storage":[{"locale":null,"scope":null,"data":false}],
+		"power_reclining":[{"locale":null,"scope":null,"data":false}],
+		"underbed_storage":[{"locale":null,"scope":null,"data":false}],
+		"electrical_outlets":[{"locale":null,"scope":null,"data":false}],
+		"silverware_storage":[{"locale":null,"scope":null,"data":false}],
+		"omit_from_Error":[{"locale":null,"scope":null,"data":true}],
+		"canbe_sold_separately":[{"locale":null,"scope":null,"data":false}],
+		"changeable_doorpanels":[{"locale":null,"scope":null,"data":false}],
+		"is_delivery_chargeable":[{"locale":null,"scope":null,"data":false}],
+		"price_online_sale":[{"locale":null,"scope":null,"data":"0.0000"}]},
+	"created":"2018-10-23T06:53:41+00:00",
+	"updated":"2020-09-10T14:04:38+00:00",
+	"associations":{
+		"UPSELL":{"products":[],"product_models":[],"groups":[]},
+		"X_SELL":{"products":[],"product_models":[],"groups":[]},
+		"RELATED":{"products":[],"product_models":[],"groups":[]}},
+	"metadata":{"workflow_status":"working_copy"}
+}			
+*/
+
+/*
+{ rules:
+   { categorize_tmpskus_simples:
+      { priority: 0,
+        conditions:
+         [ { value: 'sku', operator: 'DOES NOT CONTAIN', value: 'CNF_' },
+           { value: 'sku', operator: 'STARTS WITH', value: 'tmp_' },
+           { value: 'categories',
+             operator: 'UNCLASSIFIED',
+             value: [ null, [length]: 1 ] },
+           [length]: 3 ],
+        actions:
+         [ { type: 'add',
+             value: 'categories',
+             items: [ 'repair', [length]: 1 ] },
+           [length]: 1 ] } } }
+*/
+export async function evaluate(logger: Logger, rules: any[], doc: any): Promise<any> {
+	const methodName: string = 'evaluate';
+	logger.info({ moduleName, methodName }, `Starting ...`);
+
+	const results: any = {
+		original: doc,
+		modified: { identifier: doc.identifier, values: {} },
+		modifications: 0
+	};
+
+	rules.sort((a, b) => {
+	    const a_ = a.priority;
+	    const b_ = b.priority;
+	    if (a_ < b_) {
+	      return -1;
+	    }
+	    if (a_ > b_) {
+	      return 1;
+	    }
+	    return 0;
+	});
+
+	for (const rule of rules) {
+		if (rule.enabled) { 
+			let conditions: number = 0;
+			for (const condition of rule.conditions) {
+				let fieldLocale: string = condition.locale ? condition.locale : '';
+				let fieldScope: string = condition.scope ? condition.scope : '';
+				let field: any = null;
+				switch (condition.field) {
+					case 'family':
+						field = (doc[condition.field] !== undefined) ? doc[condition.field] : '';
+						break;
+					case 'categories':
+						field = (doc[condition.field] !== undefined) ? doc[condition.field] : '';
+						break;
+					case 'groups':
+						field = (doc[condition.field] !== undefined) ? doc[condition.field] : '';
+						break;
+					case 'parent':
+						field = (doc[condition.field] !== undefined) ? doc[condition.field] : '';
+						break;
+					case 'created':
+						field = (doc[condition.field] !== undefined) ? doc[condition.field] : '';
+						break;
+					case 'updated':
+						field = (doc[condition.field] !== undefined) ? doc[condition.field] : '';
+						break;
+					case 'associations':
+						field = (doc[condition.field] !== undefined) ? doc[condition.field] : '';
+						break;
+					case 'metadata':
+						field = (doc[condition.field] !== undefined) ? doc[condition.field] : '';
+						break;
+					default:
+						const map: Map<string, any> = new Map();
+						if (doc.values[condition.field] !== undefined) {
+							for (const valuesObject of doc.values[condition.field]) {
+								const locale: string = valuesObject.locale ? valuesObject.locale : '';
+								const scope: string = valuesObject.scope ? valuesObject.scope : '';
+								const data: any = valuesObject.data ? valuesObject.data : '';
+								map.set(`${locale}|${scope}`, data);
+							}
+						}
+						const key: string = `${fieldLocale}${fieldScope}`;
+						field = map.get(key) !== undefined ? map.get(key) : '';
+				}
+				let operator: string = condition.operator !== undefined ? condition.operator : 'null';
+				let value: any = condition.value !== undefined ? condition.value : 'null';
+				switch (operator) {
+					case BETWEEN:
+						conditions += between(logger, field, value);
+						break;		
+					case CONTAINS:
+						conditions += contains(logger, field, value);
+						break;		
+					case DOES_NOT_CONTAIN:
+						conditions += contains(logger, field, value) ? 0 : 1;
+						break;		
+					case EMPTY:
+						conditions += empty(logger, field, value);
+						break;		
+					case EQUAL_TO:
+						conditions += equalTo(logger, field, value);
+						break;		
+					case GREATER_THAN:
+						conditions += greaterThan(logger, field, value);
+						break;		
+					case GREATER_THAN_OR_EQUAL_TO:
+						conditions += greaterThan(logger, field, value) || equalTo(logger, field, value);
+						break;		
+					case IN:
+						conditions += contains(logger, field, value);
+						break;		
+					case IN_CHILDREN:
+						conditions += inChildren(logger, field, value);
+						break;		
+					case IN_OR_UNCLASSIFIED:
+						conditions += inOrUnclassified(logger, field, value);
+						break;		
+					case LESS_THAN:
+						conditions += lessThan(logger, field, value);
+						break;		
+					case LESS_THAN_OR_EQUAL_TO:
+						conditions += lessThan(logger, field, value) || equalTo(logger, field, value);
+						break;		
+					case NOT_EQUAL_TO:
+						conditions += equalTo(logger, field, value) ? 0 : 1;
+						break;		
+					case NOT_BETWEEN:
+						conditions += between(logger, field, value) ? 0 : 1;
+						break;		
+					case NOT_EMPTY:
+						conditions += empty(logger, field, value) ? 0 : 1;
+						break;		
+					case NOT_IN:
+						conditions += contains(logger, field, value) ? 0 : 1;
+						break;		
+					case NOT_IN_CHILDREN:
+						conditions += inChildren(logger, field, value) ? 0 : 1;
+						break;		
+					case STARTS_WITH:
+						conditions += startsWith(logger, field, value);
+						break;		
+					case UNCLASSIFIED:
+						conditions += unclassified(logger, field, value);
+						break;		
+					default:
+						throw new Error(`Unsupported operator: ${operator} in ${moduleName}#${methodName}.`);
+				}
+			}
+			if (conditions === rule.conditions.length) {
+				for (const action of rule.actions) {
+					switch (action.type) {
+						case ADD:
+
+							break;
+						case CALCULATE:
+
+							break;
+						case CLEAR:
+
+							break;
+						case CONCATENATE:
+
+							break;
+						case COPY:
+
+							break;
+						case REMOVE:
+
+							break;
+						case SET:
+
+							break;
+						default:
+							throw new Error(`Unsupported action type: ${action.type} in ${moduleName}#${methodName}.`);
+					}
+				}
+			}
+		}
+	}
+
+	return results;
+}
+
+export async function main(loggerIn: any = null): Promise<any> {
+  const methodName: string = 'main';
+  let logger = (loggerIn) ? loggerIn : getLogger(moduleName);
+  const loggerLevel: string = (process.env.LOG_LEVEL as string) || 'info';
+  logger.level(loggerLevel);
+  logger.info({ moduleName, methodName }, `Starting...`);
+
+  let results: any = null;
+
+	const comparisonTypesMap: Map<string, number> = new Map();
+	const filename: string = '/Users/don/work/node-akeneo/data/products.json';
+	await readliner.load(logger, filename, (line: string) => {
+		const product: any = JSON.parse(line);
+		const values: any = product.values;
+		for (const valuesProperty in values) {
+			const valuesArray: any[] = values[valuesProperty];
+			for (const valuesElement of valuesArray) {
+				const data: any = valuesElement.data;
+				const type: string = comparisonType(logger, data);
+				if (type === 'object') {
+					console.log(valuesProperty);
+					console.log(inspect(data));
+				}
+				if (comparisonTypesMap.has(type)) {
+					let count: number = (comparisonTypesMap.get(type) as number);
+					comparisonTypesMap.set(type, ++count);
+				} else {
+					comparisonTypesMap.set(type, 1);
+				}
+			}
+		}
+	});
+
+	for (const keyValuePair of comparisonTypesMap.entries()) {
+		console.log(keyValuePair);
+	}
+
+
+  if (require.main === module) {
+    setTimeout(() => { process.exit(0); }, 3000);
+  }
+
+  logger.info({ moduleName, methodName }, `Ending.`);
+
+}
+
+// Start the program
+if (require.main === module) {
+  main();
+}
