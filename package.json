@@ -1,7 +1,7 @@
 {
   "name": "node-akeneo",
   "version": "1.6.0",
-  "description": "A NodeJS framework to export and import data into/from Akeneo PIM, and integerate with it, using its Web API",
+  "description": "A NodeJS framework to export and import data into/from Akeneo PIM, and integrate with it, using its Web API",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

@@ -1,5 +1,5 @@
 # node-akeneo
-Interfaces and modules to access Akeneo version 3.x, 4.x, and 5.x from its web API
+A NodeJS framework to export and import data into/from Akeneo PIM, and integerate with it, using its Web API.
 
 ## How to clone, install modules, and compile
 
@@ -29,12 +29,4 @@ EMAIL_PASSWORD
 EMAIL_PORT
 EMAIL_TO
 EMAIL_USERNAME
-```
-
-## How to run inline tests
-
-Comment in/out the apis to exercise in the main() method, then compile and run as follows:
-
-```
-tsc && node src/akeneo
 ```
