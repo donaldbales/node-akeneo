@@ -21,7 +21,7 @@ export async function extractImages(logger: Logger, conn: any): Promise<any[]> {
   
   const tableName: string = REFERENCE_ENTITY_CODE;
   const mapPath: string = `${exportPath}${path.sep}${tableName}${path.sep}extractedImagesMap.vac`;
-  akeneo.mkdirs(logger, [ tableName ]);
+  akeneo.mkdirs([ tableName ]);
 
   if (extractedImagesMap.size === 0) {
     await mapper.load(logger, mapPath, extractedImagesMap, 'PKey');
@@ -95,7 +95,7 @@ export async function referenceEntityRecords(logger: Logger, conn: any): Promise
 
   const tableName: string = REFERENCE_ENTITY_CODE;
   const loadedImagesMapPath: string = `${exportPath}${path.sep}${tableName}${path.sep}loadedImagesMap.vac`;
-  akeneo.mkdirs(logger, [ tableName ]);
+  akeneo.mkdirs([ tableName ]);
 
   if (loadedImagesMap.size === 0) {
     await mapper.load(logger, loadedImagesMapPath, loadedImagesMap, 'Text');

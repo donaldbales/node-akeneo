@@ -100,7 +100,7 @@ function argz(args: any = null): any {
 export default async function main(...args: any[]): Promise<any> {
   const methodName: string = 'main';
   console.log(`${moduleName}#${methodName}: Starting...`);
-  const logger: any = getLogger('ex-logger');
+  const logger: any = getLogger(moduleName);
   const loggerLevel: string = (process.env.LOG_LEVEL as string) || 'info';
   logger.level(loggerLevel);
   /*

@@ -1,6 +1,6 @@
 {
   "name": "node-akeneo",
-  "version": "1.6.0",
+  "version": "1.6.17",
   "description": "A NodeJS framework to export and import data into/from Akeneo PIM, and integrate with it, using its Web API",
   "main": "index.js",
   "scripts": {
@@ -20,7 +20,7 @@
     "change-case": "^4.1.1",
     "minimist": "^1.2.7",
     "mysql": "^2.18.1",
-    "node-akeneo-api": "^1.6.0",
+    "node-akeneo-api": "^1.6.17",
     "nodemailer": "^6.8.0",
     "tedious": "13.2.0",
     "tslint": "^5.11.0",

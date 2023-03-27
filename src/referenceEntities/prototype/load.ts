@@ -25,7 +25,7 @@ export async function loadImages(logger: Logger, conn: any): Promise<any[]> {
   const tableName: string = REFERENCE_ENTITY_CODE;
   const extractedImagesMapPath: string = `${exportPath}${path.sep}${tableName}${path.sep}extractedImagesMap.vac`;
   const loadedImagesMapPath: string = `${exportPath}${path.sep}${tableName}${path.sep}loadedImagesMap.vac`;
-  akeneo.mkdirs(logger, [ tableName ]);
+  akeneo.mkdirs([ tableName ]);
 
   if (extractedImagesMap.size === 0) {
     await mapper.load(logger, extractedImagesMapPath, extractedImagesMap, 'PKey');
